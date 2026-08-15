@@ -3,7 +3,7 @@
 > 支持自定义主题的原神风格贪吃蛇游戏，内置 GitHub / Gitee 双平台主题仓库浏览。
 
 <p align="center">
-<a href="https://hxtx-hi.github.io/snakegame_theme/game.html">
+<a href="https://hxtx-hi.github.io/snakegame_theme/">
 <img src="https://img.shields.io/badge/开始游戏-在线游玩-10b981?style=for-the-badge&logo=googlechrome&logoColor=white" alt="开始游戏在线游玩" />
 </a>
 </p>
@@ -18,7 +18,7 @@
 
 ```
 snakegame_theme/
-├── game.html          # 游戏本体（直接用浏览器打开即可运行）
+├── index.html         # 游戏本体（直接用浏览器打开即可运行）
 ├── themes/            # 官方主题文件
 │   ├── columbina.json # 哥伦比娅风格
 │   ├── collei.json     # 柯莱风格
@@ -29,11 +29,11 @@ snakegame_theme/
 ## 在线体验
 
 访问 GitHub Pages 在线游玩：
-**[https://hxtx-hi.github.io/snakegame_theme/game.html](https://hxtx-hi.github.io/snakegame_theme/game.html)**
+**[https://hxtx-hi.github.io/snakegame_theme/](https://hxtx-hi.github.io/snakegame_theme/)**
 
 ## 安装教程
 
-1. 下载 `game.html` 文件
+1. 下载 `index.html` 文件
 2. 用浏览器打开即可运行
 
 ## 使用说明
@@ -48,7 +48,7 @@ snakegame_theme/
 
 | 平台 | 仓库地址 | Pages |
 |------|---------|-------|
-| GitHub | [snakegame_theme](https://github.com/hxtx-hi/snakegame_theme) | [在线游玩](https://hxtx-hi.github.io/snakegame_theme/game.html) |
+| GitHub | [snakegame_theme](https://github.com/hxtx-hi/snakegame_theme) | [在线游玩](https://hxtx-hi.github.io/snakegame_theme/) |
 | Gitee | [snakegame_theme](https://gitee.com/hxtx-hi/snakegame_theme) | 仓库主页 |
 
 ## 参与贡献
