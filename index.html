@@ -2794,7 +2794,7 @@ function renderRepoThemeList(themes, info, listEl, descEl) {
 
     const nameEl = document.createElement('div');
     nameEl.style.cssText = 'flex:1;min-width:0;';
-    nameEl.innerHTML = `<div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${item.name}</div>
+    nameEl.innerHTML = `<div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${item.name.replace(/\.json$/i, '')}</div>
       <div style="font-size:11px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.path}</div>`;
 
     const btnEl = document.createElement('button');
@@ -2857,24 +2857,54 @@ function applyThemeFromRepoItem(item, info) {
   showToast('正在拉取主题文件…');
 
   if (info.platform === 'github') {
-    // GitHub: raw URL supports CORS, fetch directly
+    // GitHub: try raw download_url first, fallback to API if Chinese filename causes issues
     const downloadUrl = item.download_url;
-    if (!downloadUrl) { showToast('无法获取该文件的下载地址~'); return; }
+    // Build API fallback URL for Chinese filenames
+    const encodedPath = encodeURIComponent(item.path);
+    const apiFallbackUrl = `https://api.github.com/repos/${info.owner}/${info.repo}/contents/${encodedPath}?ref=${info.ref}`;
 
-    fetch(downloadUrl)
-      .then(res => {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      })
-      .then(data => {
-        if (!data || !data.name) throw new Error('JSON格式不正确或缺少name字段');
-        applyStyle(data, true);
-        showToast(`「${data.name}」风格已从仓库加载~`);
-        closeRepoPickerModal();
-      })
-      .catch(err => {
-        showToast('拉取失败：' + err.message);
-      });
+    const tryFetch = (url, isApi) => {
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          if (isApi && data && data.content) {
+            // API returns base64-encoded content
+            const b64 = data.content.replace(/\n/g, '');
+            const binaryStr = atob(b64);
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+            const jsonStr = new TextDecoder('utf-8').decode(bytes);
+            return JSON.parse(jsonStr);
+          }
+          return data;
+        })
+        .then(data => {
+          if (!data || !data.name) throw new Error('JSON格式不正确或缺少name字段');
+          applyStyle(data, true);
+          showToast(`「${data.name}」风格已从仓库加载~`);
+          closeRepoPickerModal();
+        })
+        .catch(err => {
+          if (!isApi) {
+            // Raw URL failed (likely Chinese filename encoding), try API fallback
+            tryFetch(apiFallbackUrl, true);
+          } else {
+            showToast('拉取失败：' + err.message);
+          }
+        });
+    };
+
+    if (downloadUrl) {
+      tryFetch(downloadUrl, false);
+    } else if (item.url) {
+      // Use API URL directly if no download_url
+      tryFetch(item.url, true);
+    } else {
+      showToast('无法获取该文件的下载地址~');
+    }
   } else {
     // Gitee: raw URL does NOT support CORS, use API to get base64 content instead
     const encodedPath = encodeURIComponent(item.path);

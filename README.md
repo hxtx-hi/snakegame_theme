@@ -20,9 +20,9 @@
 snakegame_theme/
 ├── index.html         # 游戏本体（直接用浏览器打开即可运行）
 ├── themes/            # 官方主题文件
-│   ├── columbina.json # 哥伦比娅风格
-│   ├── collei.json     # 柯莱风格
-│   └── venti.json      # 温迪风格
+│   ├── 哥伦比娅.json   # 哥伦比娅风格
+│   ├── 柯莱.json       # 柯莱风格
+│   └── 温迪.json        # 温迪风格
 └── README.md
 ```
 
