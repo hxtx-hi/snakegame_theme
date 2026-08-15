@@ -181,6 +181,14 @@ canvas { display: block; background: transparent; max-width: 100%; height: auto;
   justify-content: center;
   font-size: 18px;
 }
+.btn-author-link {
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-author-link:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px var(--glow, rgba(255,255,255,0.3));
+}
 
 /* File upload */
 .file-upload-wrapper { display: flex; align-items: center; gap: 8px; }
@@ -809,6 +817,7 @@ canvas { display: block; background: transparent; max-width: 100%; height: auto;
       <button class="btn btn-primary" onclick="game.newGame()">🔄 新游戏</button>
       <button class="btn" onclick="game.togglePause()" id="btn-pause">⏯️ 暂停</button>
       <button class="btn btn-icon" onclick="openSettings()" title="设置">⚙️</button>
+      <a class="btn btn-icon btn-author-link" href="https://hxtx-hi.github.io" target="_blank" title="作者主页">👤</a>
     </div>
   </div>
 </div>

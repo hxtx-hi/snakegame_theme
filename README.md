@@ -1,6 +1,12 @@
 # 贪吃蛇小游戏
 
-> 一个支持自定义主题的原神风格贪吃蛇游戏，内置主题仓库浏览功能。
+<a href="https://hxtx-hi.github.io/snakegame_theme/game.html" target="_blank">
+  <img src="banner.jpg" alt="贪吃蛇小游戏 - 点击在线游玩" width="100%">
+</a>
+
+> 点击上方图片立即开始游戏！支持自定义主题，内置 GitHub / Gitee 双平台主题仓库浏览。
+
+---
 
 ## 介绍
 
@@ -11,6 +17,7 @@
 ```
 snakegame_theme/
 ├── game.html          # 游戏本体（直接用浏览器打开即可运行）
+├── banner.jpg         # README 横幅图片
 ├── themes/            # 官方主题文件
 │   ├── columbina.json # 哥伦比娅风格
 │   ├── collei.json     # 柯莱风格
@@ -21,7 +28,7 @@ snakegame_theme/
 ## 在线体验
 
 访问 GitHub Pages 在线游玩：
-`https://hxtx-hi.github.io/snakegame_theme/game.html`
+**[https://hxtx-hi.github.io/snakegame_theme/game.html](https://hxtx-hi.github.io/snakegame_theme/game.html)**
 
 ## 安装教程
 
@@ -34,15 +41,26 @@ snakegame_theme/
 2. 游戏里的官方主题仓库就是本仓库
 3. 在设置 → 风格装扮 → 官方主题列表中，可选择从 GitHub 或 Gitee 加载主题
 4. 内置豆包主题生成提示词，可以在复制粘贴间一键生成
+5. 点击设置旁的 👤 按钮可访问作者主页
 
 ## 双平台支持
 
-| 平台 | 仓库地址 |
-|------|---------|
-| GitHub | https://github.com/hxtx-hi/snakegame_theme |
-| Gitee | https://gitee.com/hxtx-hi/snakegame_theme |
+| 平台 | 仓库地址 | Pages |
+|------|---------|-------|
+| GitHub | [snakegame_theme](https://github.com/hxtx-hi/snakegame_theme) | [在线游玩](https://hxtx-hi.github.io/snakegame_theme/game.html) |
+| Gitee | [snakegame_theme](https://gitee.com/hxtx-hi/snakegame_theme) | 仓库主页 |
 
 ## 参与贡献
 
 1. 项目由 TRAE 生成，本人未动一字
 2. 部分主题含有来自米游社的图片做背景（侵删）
+
+## 相关链接
+
+- **作者主页：** [https://hxtx-hi.github.io](https://hxtx-hi.github.io)
+- **GitHub：** [https://github.com/hxtx-hi/snakegame_theme](https://github.com/hxtx-hi/snakegame_theme)
+- **Gitee：** [https://gitee.com/hxtx-hi/snakegame_theme](https://gitee.com/hxtx-hi/snakegame_theme)
+
+## License
+
+MIT
