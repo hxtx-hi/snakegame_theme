@@ -1,0 +1,3631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪吃蛇</title>
+<style>
+/* ========== CSS Variables & Reset ========== */
+:root {
+  --bg: #f3f3f3;
+  --surface: rgba(255,255,255,0.45);
+  --surface2: rgba(255,255,255,0.3);
+  --card: rgba(255,255,255,0.35);
+  --border: rgba(255,255,255,0.25);
+  --text: #1a1a1a;
+  --text2: #5a5a5a;
+  --text3: #8a8a8a;
+  --accent: #0078d4;
+  --accent-hover: #006cbd;
+  --accent-light: rgba(0,120,212,0.15);
+  --danger: #c42b1c;
+  --success: #0f7b0f;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --radius: 8px;
+  --radius-sm: 4px;
+  --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --nav-width: 260px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --acrylic: saturate(140%) blur(8px);
+  --acrylic-bg: rgba(255,255,255,0.32);
+  --acrylic-border: rgba(255,255,255,0.25);
+}
+
+[data-theme="dark"] {
+  --bg: #1e1e1e;
+  --surface: rgba(30,30,30,0.55);
+  --surface2: rgba(20,20,20,0.45);
+  --card: rgba(40,40,40,0.5);
+  --border: rgba(255,255,255,0.12);
+  --text: #f0f0f0;
+  --text2: #b0b0b0;
+  --text3: #808080;
+  --accent: #2b88d8;
+  --accent-hover: #3a9aea;
+  --accent-light: rgba(43,136,216,0.2);
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --acrylic-bg: rgba(30,30,40,0.4);
+  --acrylic-border: rgba(255,255,255,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  gap: 16px;
+  transition: filter var(--transition);
+}
+#game-container.blurred { filter: blur(2px); }
+
+/* ========== Game Layout ========== */
+#game-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+#action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.game-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+/* HUD */
+#hud {
+  display: flex;
+  gap: 24px;
+  background: rgba(255,255,255,0.22);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border: 1px solid var(--acrylic-border);
+  border-radius: var(--radius);
+  padding: 12px 24px;
+  box-shadow: var(--shadow);
+}
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 70px;
+}
+.hud-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.hud-value {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.hud-value.accent { color: var(--accent); }
+
+#canvas-wrapper {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--acrylic-border);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+}
+canvas { display: block; background: transparent; max-width: 100%; height: auto; }
+
+/* Buttons */
+.btn {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--acrylic-border);
+  background: var(--acrylic-bg);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { background: rgba(255,255,255,0.4); }
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+.btn-icon {
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+/* File upload */
+.file-upload-wrapper { display: flex; align-items: center; gap: 8px; }
+
+/* Doubao prompt card */
+.doubao-prompt-card { cursor: pointer; transition: all 0.2s; }
+.doubao-prompt-card:hover { background: rgba(255,255,255,0.28); }
+
+/* ========== Settings Panel ========== */
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+#settings-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+}
+.settings-window {
+  position: relative;
+  display: flex;
+  width: 900px;
+  max-width: 95vw;
+  height: 620px;
+  max-height: 90vh;
+  margin: auto;
+  background: var(--acrylic-bg);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border-radius: 12px;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.25);
+  overflow: hidden;
+  border: 1px solid var(--acrylic-border);
+  transform: scale(0.95);
+  transition: transform 0.25s ease;
+}
+#settings-overlay.open .settings-window { transform: scale(1); }
+
+.settings-sidebar {
+  width: var(--nav-width);
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border-right: 1px solid var(--acrylic-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.settings-sidebar-header {
+  padding: 24px 20px 16px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.settings-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text2);
+  transition: all var(--transition);
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--card); }
+.nav-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 500;
+}
+.nav-icon { width: 20px; text-align: center; font-size: 16px; }
+
+.settings-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  padding-bottom: 20px;
+}
+.settings-section { display: none; }
+.settings-section.active { display: block; }
+.settings-section h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.settings-section .section-desc {
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 24px;
+}
+
+.setting-card {
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border: 1px solid var(--acrylic-border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+}
+.setting-row + .setting-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.setting-info h4 { font-size: 14px; font-weight: 500; }
+.setting-info p { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* Toggle */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle .slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.toggle .slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: all var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle input:checked + .slider { background: var(--accent); }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+
+.settings-select {
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  min-width: 140px;
+  outline: none;
+}
+.settings-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.range-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.range-group input[type="range"] {
+  -webkit-appearance: none;
+  width: 140px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+.range-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.range-value {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 36px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.settings-number {
+  font-family: var(--font);
+  font-size: 13px;
+  width: 80px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  text-align: center;
+  outline: none;
+}
+.settings-number:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 32px;
+  border-top: 1px solid var(--acrylic-border);
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  flex-shrink: 0;
+}
+
+/* ========== Game Over Modal ========== */
+#win-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#win-modal.show { opacity: 1; pointer-events: auto; }
+#doubao-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#doubao-modal.show { opacity: 1; pointer-events: auto; }
+#export-modal, #version-update-modal, #repo-picker-modal {
+  position: fixed; inset: 0; z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+#export-modal.show, #version-update-modal.show, #repo-picker-modal.show { opacity: 1; pointer-events: auto; }
+.win-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+}
+.win-card {
+  position: relative;
+  background: var(--acrylic-bg);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 90%;
+  animation: winPop 0.4s ease;
+  border: 1px solid var(--acrylic-border);
+}
+@keyframes winPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.win-card .win-icon { font-size: 56px; margin-bottom: 12px; }
+.win-card h2 { font-size: 24px; margin-bottom: 8px; }
+.win-card .win-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.win-stat {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.win-stat .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+.win-stat .lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(255,255,255,0.28);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border: 1px solid var(--acrylic-border);
+  color: var(--text);
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 2000;
+  transition: transform 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Restore dialog */
+.restore-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.restore-dialog.show {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+.rd-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+}
+.rd-card {
+  position: relative;
+  background: var(--acrylic-bg);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border-radius: 12px;
+  padding: 28px 32px;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  max-width: 420px;
+  width: 90%;
+  animation: winPop 0.35s ease;
+  border: 1px solid var(--acrylic-border);
+}
+.rd-card h3 { font-size: 20px; margin-bottom: 8px; }
+.rd-card p { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+.rd-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Pause overlay */
+#pause-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: var(--radius);
+  letter-spacing: 4px;
+}
+#pause-overlay.show { opacity: 1; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ========== Touch D-Pad ========== */
+#touch-dpad {
+  display: none;
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-top: 4px;
+}
+#touch-dpad .dpad-btn {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--acrylic-bg);
+  backdrop-filter: var(--acrylic);
+  -webkit-backdrop-filter: var(--acrylic);
+  border: 1px solid var(--acrylic-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.1s;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+#touch-dpad .dpad-btn:active {
+  background: var(--accent);
+  color: #fff;
+  transform: scale(0.92);
+  border-color: var(--accent);
+}
+#touch-dpad .dpad-up    { top: 0; left: 50%; transform: translateX(-50%); }
+#touch-dpad .dpad-down  { bottom: 0; left: 50%; transform: translateX(-50%); }
+#touch-dpad .dpad-left  { left: 0; top: 50%; transform: translateY(-50%); }
+#touch-dpad .dpad-right { right: 0; top: 50%; transform: translateY(-50%); }
+
+/* ========== Responsive ========== */
+/* Portrait mobile (current default) */
+@media (max-width: 768px), (max-height: 600px) {
+  body { overflow: auto; }
+  #game-container {
+    padding: 8px;
+    gap: 8px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  #game-layout { gap: 8px; }
+  #action-buttons { gap: 8px; }
+  .game-header h1 { font-size: 20px; }
+  #hud { gap: 8px; padding: 8px 12px; flex-wrap: wrap; justify-content: center; }
+  .hud-item { min-width: 50px; }
+  .hud-value { font-size: 16px; }
+  .hud-label { font-size: 10px; }
+  #canvas-wrapper { max-width: 95vw; }
+  #touch-dpad { display: block; }
+  .btn { font-size: 12px; padding: 6px 14px; }
+  .btn-icon { width: 36px; height: 36px; font-size: 16px; }
+  .settings-window {
+    flex-direction: column;
+    width: 100vw; height: 100vh; height: 100dvh;
+    max-width: 100vw; max-height: 100vh; max-height: 100dvh;
+    border-radius: 0;
+  }
+  .settings-sidebar { width: 100%; height: auto; flex-shrink: 0; border-right: none; border-bottom: 1px solid var(--border); }
+  .settings-nav { display: flex; overflow-x: auto; padding: 8px; gap: 4px; }
+  .nav-item { flex-shrink: 0; white-space: nowrap; }
+  .settings-sidebar-header { padding: 12px 16px 8px; font-size: 16px; }
+  .settings-right { min-height: 0; }
+  .settings-content { padding: 16px; }
+  .settings-section h2 { font-size: 18px; }
+  .setting-row { flex-wrap: wrap; gap: 8px; }
+  .setting-info { flex: 1; min-width: 140px; }
+  .settings-select { min-width: 120px; font-size: 12px; }
+  .range-group input[type="range"] { width: 100px; }
+}
+
+@media (min-width: 769px) {
+  #touch-dpad { display: none; }
+  canvas { max-width: none; }
+}
+
+/* ========== Landscape (desktop / tablet) ========== */
+@media (orientation: landscape) and (min-width: 769px) {
+  .game-header h1 { font-size: 20px; }
+
+  #game-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 1400px;
+  }
+
+  /* HUD → vertical column on the left */
+  #hud {
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    min-width: 100px;
+    align-self: stretch;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #hud .hud-item {
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  #hud .hud-label {
+    font-size: 10px;
+    margin-bottom: 0;
+  }
+  #hud .hud-value {
+    font-size: 16px;
+  }
+
+  /* Canvas → center, flex */
+  #canvas-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* Action buttons → vertical column on the right */
+  #action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+    align-self: stretch;
+    justify-content: center;
+  }
+  #action-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  #action-buttons .btn-icon {
+    width: 100%;
+  }
+
+  /* Touch D-pad hidden in landscape */
+  #touch-dpad { display: none; }
+
+  /* Settings panel: wider */
+  .settings-window {
+    width: 1100px;
+    max-width: 95vw;
+    height: 600px;
+  }
+  .settings-sidebar-header { padding: 20px 16px 12px; font-size: 18px; }
+  .settings-content { padding: 24px 28px; }
+  .settings-nav { padding: 4px 6px; }
+  .nav-item { padding: 8px 10px; font-size: 13px; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ========== GAME AREA ========== -->
+<div id="game-container">
+  <div class="game-header">
+    <h1>🐍 贪吃蛇</h1>
+  </div>
+
+  <div id="game-layout">
+    <div id="hud">
+      <div class="hud-item">
+        <span class="hud-label">得分</span>
+        <span class="hud-value accent" id="hud-score">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">长度</span>
+        <span class="hud-value" id="hud-length">1</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">速度</span>
+        <span class="hud-value" id="hud-speed">100ms</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">时间</span>
+        <span class="hud-value" id="hud-time">00:00</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">穿墙</span>
+        <span class="hud-value" id="hud-wallpass">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">食物</span>
+        <span class="hud-value" id="hud-food">1</span>
+      </div>
+    </div>
+
+    <div id="canvas-wrapper" style="position:relative;">
+      <canvas id="snake-canvas"></canvas>
+      <div id="pause-overlay">游戏已暂停</div>
+    </div>
+
+    <!-- Touch D-Pad -->
+    <div id="touch-dpad">
+      <button class="dpad-btn dpad-up" data-dir="up">▲</button>
+      <button class="dpad-btn dpad-down" data-dir="down">▼</button>
+      <button class="dpad-btn dpad-left" data-dir="left">◀</button>
+      <button class="dpad-btn dpad-right" data-dir="right">▶</button>
+    </div>
+
+    <div id="action-buttons">
+      <button class="btn btn-primary" onclick="game.newGame()">🔄 新游戏</button>
+      <button class="btn" onclick="game.togglePause()" id="btn-pause">⏯️ 暂停</button>
+      <button class="btn btn-icon" onclick="openSettings()" title="设置">⚙️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SETTINGS OVERLAY ========== -->
+<div id="settings-overlay">
+  <div class="settings-backdrop" onclick="closeSettings()"></div>
+  <div class="settings-window">
+    <div class="settings-sidebar">
+      <div class="settings-sidebar-header">✨ 调音台</div>
+      <div class="settings-nav">
+        <div class="nav-item active" data-section="game">
+          <span class="nav-icon">🎮</span> 游戏设置
+        </div>
+        <div class="nav-item" data-section="display">
+          <span class="nav-icon">🎨</span> 显示设置
+        </div>
+        <div class="nav-item" data-section="controls">
+          <span class="nav-icon">🕹️</span> 控制设置
+        </div>
+        <div class="nav-item" data-section="wallpass">
+          <span class="nav-icon">🚪</span> 穿墙设置
+        </div>
+        <div class="nav-item" data-section="scoring">
+          <span class="nav-icon">📊</span> 计分设置
+        </div>
+        <div class="nav-item" data-section="referee">
+          <span class="nav-icon">⚖️</span> 裁判设置
+        </div>
+        <div class="nav-item" data-section="style">
+          <span class="nav-icon">🎨</span> 风格装扮
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-right">
+      <div class="settings-content" id="settings-content">
+        <!-- 游戏设置 -->
+        <div class="settings-section active" id="section-game">
+          <h2>游戏设置</h2>
+          <p class="section-desc">调整棋盘大小和游戏速度</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="gridSize">
+              <div class="setting-info">
+                <h4>棋盘大小</h4>
+                <p>棋盘的格子数量</p>
+              </div>
+              <div class="range-group">
+                <input type="range" id="set-grid-size" min="10" max="40" value="20" oninput="updateRange(this,'grid-size-val')">
+                <span class="range-value" id="grid-size-val">20×20</span>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="cellSize">
+              <div class="setting-info">
+                <h4>单元格大小</h4>
+                <p>每个格子的像素大小</p>
+              </div>
+              <div class="range-group">
+                <input type="range" id="set-cell-size" min="16" max="40" value="24" oninput="updateRange(this,'cell-size-val')">
+                <span class="range-value" id="cell-size-val">24px</span>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="speed">
+              <div class="setting-info">
+                <h4>游戏速度</h4>
+                <p>蛇移动的速度（毫秒/步）</p>
+              </div>
+              <div class="range-group">
+                <input type="range" id="set-speed" min="40" max="250" value="100" step="10" oninput="updateRange(this,'speed-val')">
+                <span class="range-value" id="speed-val">100ms</span>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="progressive">
+              <div class="setting-info">
+                <h4>渐进加速</h4>
+                <p>每吃一个食物后速度逐渐加快</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-speed-progressive" onchange="updateSpeedUI()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="speedRate" id="row-speed-rate">
+              <div class="setting-info">
+                <h4>加速速率</h4>
+                <p>每吃一个食物减少的毫秒数</p>
+              </div>
+              <input type="number" class="settings-number" id="set-speed-rate" value="2" min="1" max="50">
+            </div>
+            <div class="setting-row" data-setting-key="speedMin" id="row-speed-min">
+              <div class="setting-info">
+                <h4>最快速度</h4>
+                <p>加速的上限速度（毫秒）</p>
+              </div>
+              <input type="number" class="settings-number" id="set-speed-min" value="30" min="10" max="200">
+            </div>
+            <div class="setting-row" data-setting-key="initLength">
+              <div class="setting-info">
+                <h4>初始长度</h4>
+                <p>游戏开始时蛇的长度</p>
+              </div>
+              <input type="number" class="settings-number" id="set-init-length" value="3" min="1" max="20">
+            </div>
+            <div class="setting-row" data-setting-key="foodCount">
+              <div class="setting-info">
+                <h4>食物数量</h4>
+                <p>棋盘上同时存在的食物数量</p>
+              </div>
+              <input type="number" class="settings-number" id="set-food-count" value="1" min="1" max="20">
+            </div>
+            <div class="setting-row" data-setting-key="sessionSave">
+              <div class="setting-info">
+                <h4>保存会话设置</h4>
+                <p>退出时自动保存设置，下次打开可恢复</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-session-save-enabled" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 显示设置 -->
+        <div class="settings-section" id="section-display">
+          <h2>显示设置</h2>
+          <p class="section-desc">自定义界面外观和主题</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="darkMode">
+              <div class="setting-info">
+                <h4>深色模式</h4>
+                <p>切换明暗主题</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-dark-mode" onchange="applyTheme()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="accent">
+              <div class="setting-info">
+                <h4>强调色</h4>
+                <p>选择界面和食物的强调色</p>
+              </div>
+              <select class="settings-select" id="set-accent" onchange="applyAccent()">
+                <option value="#0078d4" selected>默认蓝</option>
+                <option value="#c42b1c">红色</option>
+                <option value="#0f7b0f">绿色</option>
+                <option value="#9b59b6">紫色</option>
+                <option value="#e67e22">橙色</option>
+                <option value="#00bcd4">青色</option>
+                <option value="#d470a8">粉色</option>
+              </select>
+            </div>
+            <div class="setting-row" data-setting-key="snakeColor">
+              <div class="setting-info">
+                <h4>蛇身颜色</h4>
+                <p>蛇身体的颜色</p>
+              </div>
+              <input type="color" id="set-snake-color" value="#4caf50" style="width:40px;height:30px;border:none;cursor:pointer;border-radius:4px;">
+            </div>
+            <div class="setting-row" data-setting-key="headColor">
+              <div class="setting-info">
+                <h4>蛇头颜色</h4>
+                <p>蛇头部的颜色</p>
+              </div>
+              <input type="color" id="set-head-color" value="#2e7d32" style="width:40px;height:30px;border:none;cursor:pointer;border-radius:4px;">
+            </div>
+            <div class="setting-row" data-setting-key="foodColor">
+              <div class="setting-info">
+                <h4>食物颜色</h4>
+                <p>食物的颜色</p>
+              </div>
+              <input type="color" id="set-food-color" value="#ff5252" style="width:40px;height:30px;border:none;cursor:pointer;border-radius:4px;">
+            </div>
+            <div class="setting-row" data-setting-key="bgColor">
+              <div class="setting-info">
+                <h4>背景颜色</h4>
+                <p>游戏区域的背景颜色</p>
+              </div>
+              <input type="color" id="set-bg-color" value="#1a1a2e" style="width:40px;height:30px;border:none;cursor:pointer;border-radius:4px;">
+            </div>
+            <div class="setting-row" data-setting-key="showGrid">
+              <div class="setting-info">
+                <h4>显示网格线</h4>
+                <p>在游戏区域显示网格线</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-show-grid">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="acrylic">
+              <div class="setting-info">
+                <h4>亚克力效果</h4>
+                <p>老旧手机使用亚克力效果可能产生卡顿，取消勾选该选项可以提高手机运行效率</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-acrylic" onchange="applyAcrylic()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 控制设置 -->
+        <div class="settings-section" id="section-controls">
+          <h2>控制设置</h2>
+          <p class="section-desc">自定义操作方式和按键</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="moveMode">
+              <div class="setting-info">
+                <h4>移动方式</h4>
+                <p>选择控制蛇移动的方式</p>
+              </div>
+              <select class="settings-select" id="set-move-mode">
+                <option value="arrows">方向键 (↑↓←→)</option>
+                <option value="wasd">WASD</option>
+                <option value="both" selected>两者都可用</option>
+              </select>
+            </div>
+            <div class="setting-row" data-setting-key="pauseKey">
+              <div class="setting-info">
+                <h4>暂停快捷键</h4>
+                <p>暂停/继续游戏的按键</p>
+              </div>
+              <select class="settings-select" id="set-pause-key">
+                <option value=" " selected>空格键</option>
+                <option value="Escape">Esc</option>
+                <option value="p">P键</option>
+              </select>
+            </div>
+            <div class="setting-row" data-setting-key="noReverse">
+              <div class="setting-info">
+                <h4>禁止反向移动</h4>
+                <p>禁止蛇直接掉头（防止自杀）</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-no-reverse" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 穿墙设置 -->
+        <div class="settings-section" id="section-wallpass">
+          <h2>穿墙设置</h2>
+          <p class="section-desc">配置穿墙（边界穿越）行为</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="enabled">
+              <div class="setting-info">
+                <h4>启用穿墙</h4>
+                <p>蛇碰到墙壁时从对面穿出（关闭则撞墙死亡）</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-wallpass-enabled" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="penalty">
+              <div class="setting-info">
+                <h4>穿墙扣分</h4>
+                <p>每次穿墙扣除的分数</p>
+              </div>
+              <input type="number" class="settings-number" id="set-wallpass-penalty" value="2" min="0" max="100">
+            </div>
+            <div class="setting-row" data-setting-key="cooldown">
+              <div class="setting-info">
+                <h4>穿墙冷却</h4>
+                <p>连续穿墙的最小间隔（帧数，0=无冷却）</p>
+              </div>
+              <input type="number" class="settings-number" id="set-wallpass-cooldown" value="0" min="0" max="30">
+            </div>
+            <div class="setting-row" data-setting-key="limit">
+              <div class="setting-info">
+                <h4>穿墙次数限制</h4>
+                <p>每局可穿墙的最大次数（0=无限）</p>
+              </div>
+              <input type="number" class="settings-number" id="set-wallpass-limit" value="0" min="0" max="9999">
+            </div>
+            <div class="setting-row" data-setting-key="fx">
+              <div class="setting-info">
+                <h4>穿墙特效</h4>
+                <p>穿墙时显示视觉特效</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-wallpass-fx" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 计分设置 -->
+        <div class="settings-section" id="section-scoring">
+          <h2>计分设置</h2>
+          <p class="section-desc">配置得分规则和计算方式</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="foodScore">
+              <div class="setting-info">
+                <h4>每食物基础分</h4>
+                <p>每吃一个食物获得的基础分数</p>
+              </div>
+              <input type="number" class="settings-number" id="set-score-food" value="10" min="0" max="1000">
+            </div>
+            <div class="setting-row" data-setting-key="lengthBonus">
+              <div class="setting-info">
+                <h4>长度奖励</h4>
+                <p>蛇身越长，每食物额外加分</p>
+              </div>
+              <input type="number" class="settings-number" id="set-score-length-bonus" value="1" min="0" max="100">
+            </div>
+            <div class="setting-row" data-setting-key="speedMult">
+              <div class="setting-info">
+                <h4>速度奖励倍率</h4>
+                <p>速度越快，分数倍率越高</p>
+              </div>
+              <div class="range-group">
+                <input type="range" id="set-score-speed-mult" min="1.0" max="3.0" value="1.0" step="0.1" oninput="updateRangeFloat(this,'speed-mult-val')">
+                <span class="range-value" id="speed-mult-val">1.0x</span>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="enabled">
+              <div class="setting-info">
+                <h4>启用计分</h4>
+                <p>关闭后不再计算分数</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-scoring-enabled" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 裁判设置 -->
+        <div class="settings-section" id="section-referee">
+          <h2>裁判设置</h2>
+          <p class="section-desc">配置裁判方式和判定规则</p>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="mode">
+              <div class="setting-info">
+                <h4>裁判模式</h4>
+                <p>选择游戏结束判定方式</p>
+              </div>
+              <select class="settings-select" id="set-referee-mode" onchange="updateRefereeUI()">
+                <option value="auto" selected>自动裁判（无限进行）</option>
+                <option value="score">目标分数裁判</option>
+                <option value="timer">计时裁判</option>
+                <option value="hybrid">混合裁判</option>
+              </select>
+            </div>
+            <div class="setting-row" data-setting-key="target" id="row-referee-target">
+              <div class="setting-info">
+                <h4>目标分数</h4>
+                <p>达到此分数即判定胜利</p>
+              </div>
+              <input type="number" class="settings-number" id="set-referee-target" value="100" min="10" max="99999">
+            </div>
+            <div class="setting-row" data-setting-key="timelimit" id="row-referee-timelimit">
+              <div class="setting-info">
+                <h4>时间限制（秒）</h4>
+                <p>超时则判定失败</p>
+              </div>
+              <input type="number" class="settings-number" id="set-referee-timelimit" value="120" min="10" max="3600">
+            </div>
+            <div class="setting-row" data-setting-key="selfCollide">
+              <div class="setting-info">
+                <h4>自撞判定</h4>
+                <p>蛇撞到自己身体时判定失败</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-referee-self-collide" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="wallCollide">
+              <div class="setting-info">
+                <h4>撞墙判定</h4>
+                <p>穿墙关闭时，撞墙判定失败</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-referee-wall-collide" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="selfPass">
+              <div class="setting-info">
+                <h4>自撞越过</h4>
+                <p>撞到自身时截断身体继续前进（不结束游戏）</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-self-pass-through">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row" data-setting-key="autoExpand">
+              <div class="setting-info">
+                <h4>边缘自动拓宽</h4>
+                <p>碰到棋盘边缘时自动扩大棋盘（优先于穿墙）</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set-auto-expand-grid">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 风格装扮 -->
+        <div class="settings-section" id="section-style">
+          <h2>风格装扮</h2>
+          <p class="section-desc">用JSON文件定义独一无二的舞台风格~</p>
+          <!-- 主题版本不匹配警告 -->
+          <div id="style-version-warning" class="setting-card" style="display:none;background:rgba(255,60,60,0.15);border:1px solid rgba(255,60,60,0.4);border-radius:var(--radius-md);padding:12px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <div>
+                <div style="font-weight:600;color:#ff5252;font-size:14px;">⚠️ 主题版本不匹配</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:2px;">部分配置项可能无法在当前版本中正确应用</div>
+              </div>
+              <button class="btn" onclick="openVersionUpdateModal()" style="background:rgba(255,60,60,0.2);border:1px solid rgba(255,60,60,0.4);color:#ff5252;font-size:12px;padding:4px 12px;">更新</button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="importFile">
+              <div class="setting-info">
+                <h4>导入风格（文件）</h4>
+                <p>上传符合规范的JSON文件，一键换装</p>
+              </div>
+              <div class="file-upload-wrapper">
+                <input type="file" id="style-json-upload" accept=".json" style="display:none" onchange="handleStyleUpload(event)">
+                <button class="btn" onclick="document.getElementById('style-json-upload').click()">📁 选择文件</button>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="importPaste" style="flex-wrap:wrap;">
+              <div class="setting-info" style="flex:1;min-width:200px;">
+                <h4>导入风格（粘贴文本）</h4>
+                <p>直接粘贴JSON内容，点击解析即可应用</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:200px;">
+                <textarea id="style-json-paste" placeholder="在此粘贴JSON内容…" style="width:100%;min-height:80px;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-family:monospace;font-size:12px;resize:vertical;"></textarea>
+                <button class="btn btn-primary" onclick="handleStylePaste()" style="align-self:flex-end;">🔍 解析并应用</button>
+              </div>
+            </div>
+            <div class="setting-row" data-setting-key="currentStyle">
+              <div class="setting-info">
+                <h4>当前风格</h4>
+                <p id="current-style-name">默认风格</p>
+              </div>
+              <button class="btn btn-danger" onclick="resetStyle()">↺ 恢复默认</button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="preview">
+              <div class="setting-info" style="flex:1">
+                <h4>风格预览</h4>
+                <div id="style-preview" style="margin-top:8px;font-size:12px;color:var(--text3);white-space:pre-wrap;max-height:200px;overflow-y:auto;">暂无风格文件导入</div>
+              </div>
+            </div>
+          </div>
+          <!-- 豆包提示词 -->
+          <div class="setting-card doubao-prompt-card" onclick="openDoubaoModal()" title="点击打开提示词生成器">
+            <div class="setting-row" data-setting-key="doubao">
+              <div class="setting-info" style="flex:1">
+                <h4>🤖 豆包提示词</h4>
+                <p style="font-size:12px;color:var(--text3);">复制这个内容发给豆包，一键生成主题</p>
+                <div id="doubao-prompt-preview" style="margin-top:8px;font-size:11px;color:var(--text3);white-space:pre-wrap;max-height:120px;overflow-y:auto;opacity:0.7;"></div>
+              </div>
+              <button class="btn" onclick="event.stopPropagation();openDoubaoModal()" style="align-self:flex-start;">📝 生成</button>
+            </div>
+          </div>
+          <!-- 导出主题 -->
+          <div class="setting-card">
+            <div class="setting-row" data-setting-key="exportTheme">
+              <div class="setting-info" style="flex:1">
+                <h4>📤 导出主题</h4>
+                <p style="font-size:12px;color:var(--text3);">将当前主题导出为JSON文件，方便分享给其他玩家</p>
+              </div>
+              <button class="btn btn-primary" onclick="openExportModal()" style="align-self:flex-start;">📤 导出</button>
+            </div>
+          </div>
+          <!-- 从链接导入 -->
+          <div class="setting-card">
+            <div class="setting-row" style="flex-wrap:wrap;">
+              <div class="setting-info" style="flex:1;min-width:200px;">
+                <h4>🔗 从链接导入</h4>
+                <p style="font-size:12px;color:var(--text3);">输入JSON文件的下载链接，自动拉取并应用主题</p>
+              </div>
+              <div style="display:flex;gap:8px;flex:1;min-width:200px;">
+                <input type="text" id="style-url-input" placeholder="https://example.com/theme.json" style="flex:1;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-size:12px;">
+                <button class="btn btn-primary" onclick="handleStyleUrlImport()" style="white-space:nowrap;">📥 导入</button>
+              </div>
+            </div>
+          </div>
+          <!-- 从仓库导入 -->
+          <div class="setting-card">
+            <div class="setting-row" style="flex-wrap:wrap;">
+              <div class="setting-info" style="flex:1;min-width:200px;">
+                <h4>📦 从仓库导入</h4>
+                <p style="font-size:12px;color:var(--text3);">输入GitHub或Gitee仓库链接，自动扫描仓库中的主题文件供选择</p>
+              </div>
+              <div style="display:flex;gap:8px;flex:1;min-width:200px;">
+                <input type="text" id="style-repo-input" placeholder="https://github.com/user/repo" style="flex:1;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-size:12px;">
+                <button class="btn btn-primary" onclick="handleRepoScan()" style="white-space:nowrap;">🔍 扫描</button>
+              </div>
+            </div>
+          </div>
+          <!-- 官方主题仓库 -->
+          <div class="setting-card">
+            <div class="setting-row">
+              <div class="setting-info" style="flex:1">
+                <h4>官方主题列表</h4>
+                <p style="font-size:12px;color:var(--text3);">浏览官方主题仓库，一键获取精选主题</p>
+              </div>
+              <select id="official-repo-select" style="padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-size:12px;margin-right:8px;">
+                <option value="github">GitHub</option>
+                <option value="gitee">Gitee</option>
+              </select>
+              <button class="btn btn-primary" onclick="loadOfficialThemes()" style="white-space:nowrap;">浏览</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <button class="btn" onclick="resetSettings()">↺ 恢复默认</button>
+        <button class="btn btn-primary" onclick="applyAndClose()">✓ 应用并关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== GAME OVER MODAL ========== -->
+<div id="win-modal">
+  <div class="win-backdrop" onclick="closeWinModal()"></div>
+  <div class="win-card">
+    <div class="win-icon" id="win-icon">🎉</div>
+    <h2 id="win-title">游戏结束</h2>
+    <p style="color:var(--text2);margin-bottom:8px;" id="win-verdict"></p>
+    <div class="win-stats">
+      <div class="win-stat">
+        <div class="val" id="win-score">0</div>
+        <div class="lbl">收获星光</div>
+      </div>
+      <div class="win-stat">
+        <div class="val" id="win-length">0</div>
+        <div class="lbl">蛇身长度</div>
+      </div>
+      <div class="win-stat">
+        <div class="val" id="win-time">00:00</div>
+        <div class="lbl">用时</div>
+      </div>
+      <div class="win-stat">
+        <div class="val" id="win-wallpass">0</div>
+        <div class="lbl">穿墙次数</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="game.newGame();closeWinModal();" style="width:100%;justify-content:center;">🔄 再来一局</button>
+  </div>
+</div>
+
+<!-- ========== EXPORT STYLE MODAL ========== -->
+<div id="export-modal">
+  <div class="win-backdrop" onclick="closeExportModal()"></div>
+  <div class="win-card" style="max-width:420px;">
+    <h2>📤 导出主题</h2>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:16px;">选择导出方式</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary" onclick="exportStyleCopy()" style="width:100%;justify-content:center;padding:14px;">📋 复制JSON文本</button>
+      <button class="btn" onclick="exportStyleDownload()" style="width:100%;justify-content:center;padding:14px;">💾 下载JSON文件</button>
+      <button class="btn" onclick="exportStyleShare()" style="width:100%;justify-content:center;padding:14px;">🔗 分享（生成分享文本）</button>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn" onclick="closeExportModal()" style="width:100%;justify-content:center;">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== VERSION UPDATE MODAL ========== -->
+<div id="version-update-modal">
+  <div class="win-backdrop" onclick="closeVersionUpdateModal()"></div>
+  <div class="win-card" style="max-width:520px;">
+    <h2>🔄 更新主题配置</h2>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:12px;">你可以复制下面的更新提示词，发给豆包来生成匹配当前版本的主题JSON</p>
+    <div id="version-update-prompt" style="background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);padding:12px;font-size:12px;font-family:monospace;color:var(--text);white-space:pre-wrap;max-height:300px;overflow-y:auto;line-height:1.6;"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="copyVersionUpdatePrompt()" style="flex:1;justify-content:center;">📋 复制提示词</button>
+      <button class="btn" onclick="closeVersionUpdateModal()" style="flex:1;justify-content:center;">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== DOUBAO PROMPT MODAL ========== -->
+<div id="doubao-modal">
+  <div class="win-backdrop" onclick="closeDoubaoModal()"></div>
+  <div class="win-card" style="max-width:480px;">
+    <h2 style="margin-bottom:8px;">🤖 生成豆包提示词</h2>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px;">填入角色信息，一键生成完整提示词</p>
+    <div style="display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:16px;">
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--text);">角色名字</label>
+        <input type="text" id="doubao-char-name" placeholder="例如：芙宁娜、纳西妲、雷电将军…" style="width:100%;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-size:13px;">
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--text);">背景图片地址</label>
+        <input type="text" id="doubao-bg-url" placeholder="https://..." style="width:100%;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--acrylic-border);background:rgba(255,255,255,0.15);color:var(--text);font-size:13px;">
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;">在 Bing 中搜索角色的壁纸图，点进去长按图片选择「查看图片」，然后复制地址栏的地址到此处</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="closeDoubaoModal()" style="flex:1;justify-content:center;">取消</button>
+      <button class="btn btn-primary" onclick="generateDoubaoPrompt()" style="flex:1;justify-content:center;">📝 合成提示词并复制</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== REPO THEME PICKER MODAL ========== -->
+<div id="repo-picker-modal">
+  <div class="win-backdrop" onclick="closeRepoPickerModal()"></div>
+  <div class="win-card" style="max-width:520px;">
+    <h2>📦 仓库主题列表</h2>
+    <p style="color:var(--text3);font-size:13px;margin-bottom:12px;" id="repo-picker-desc">正在扫描仓库中的主题文件…</p>
+    <div id="repo-picker-list" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;margin-bottom:12px;">
+      <div style="text-align:center;color:var(--text3);padding:24px;">加载中…</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="closeRepoPickerModal()" style="flex:1;justify-content:center;">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Restore settings dialog -->
+<div id="restore-dialog" class="restore-dialog">
+  <div class="rd-backdrop"></div>
+  <div class="rd-card">
+    <h3>🔄 恢复上次设置</h3>
+    <p>检测到上次退出时保存的设置，是否加载？</p>
+    <div class="rd-actions">
+      <button class="btn" onclick="restoreDecline()">使用默认</button>
+      <button class="btn btn-primary" onclick="restoreAccept()">加载上次设置</button>
+    </div>
+    <button class="btn" style="margin-top:10px;font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;" onclick="restorePermanentlyDecline()">不再询问，恢复默认并清除记录</button>
+  </div>
+</div>
+
+<script>
+// ==================== DEFAULT SETTINGS ====================
+const DEFAULTS = {
+  gridSize: 20,
+  cellSize: 24,
+  speed: 100,
+  speedProgressive: false,
+  speedProgressiveRate: 2,
+  speedMin: 30,
+  initLength: 3,
+  foodCount: 1,
+  darkMode: false,
+  accent: '#0078d4',
+  snakeColor: '#4caf50',
+  headColor: '#2e7d32',
+  foodColor: '#ff5252',
+  bgColor: '#1a1a2e',
+  showGrid: false,
+  moveMode: 'both',
+  pauseKey: ' ',
+  noReverse: true,
+  wallpassEnabled: true,
+  wallpassPenalty: 2,
+  wallpassCooldown: 0,
+  wallpassLimit: 0,
+  wallpassFx: true,
+  scoreFood: 10,
+  scoreLengthBonus: 1,
+  scoreSpeedMult: 1.0,
+  scoringEnabled: true,
+  refereeMode: 'auto',
+  refereeTarget: 100,
+  refereeTimelimit: 120,
+  refereeSelfCollide: true,
+  refereeWallCollide: true,
+  selfPassThrough: false,
+  autoExpandGrid: false,
+  sessionSaveEnabled: true,
+  acrylicEnabled: true,
+};
+
+let S = loadSettings();
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('snake-game-settings');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Safety clamp: prevent unreasonable values that crash the browser
+      if (parsed.initLength > 100) parsed.initLength = DEFAULTS.initLength;
+      if (parsed.gridSize > 200) parsed.gridSize = DEFAULTS.gridSize;
+      if (parsed.foodCount > 50) parsed.foodCount = DEFAULTS.foodCount;
+      if (parsed.wallpassLimit > 99999) parsed.wallpassLimit = DEFAULTS.wallpassLimit;
+      if (parsed.speed < 10) parsed.speed = DEFAULTS.speed;
+      return { ...DEFAULTS, ...parsed };
+    }
+  } catch(e) {}
+  return { ...DEFAULTS };
+}
+
+function saveSettings() {
+  localStorage.setItem('snake-game-settings', JSON.stringify(S));
+  // Session save: always save alongside main settings (if enabled)
+  if (S.sessionSaveEnabled) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(S));
+  }
+}
+
+// ==================== SESSION SAVE (localStorage) ====================
+const SESSION_KEY = 'snake-game-settings-session';
+
+function saveSession() {
+  syncSettingsFromUI();
+  saveSettings();
+  localStorage.setItem(SESSION_KEY, JSON.stringify(S));
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function hasSession() {
+  return localStorage.getItem(SESSION_KEY) !== null;
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+// ==================== GAME STATE ====================
+const game = {
+  grid: 0,
+  snake: [],       // [{r, c}], head at index 0
+  foods: [],       // [{r, c}, ...], multiple food items
+  direction: { dr: 0, dc: 1 },  // current direction
+  nextDirection: { dr: 0, dc: 1 },
+  score: 0,
+  wallpassCount: 0,
+  wallpassCooldownRemain: 0,
+  startTime: 0,
+  elapsed: 0,
+  currentSpeed: 100,
+  timerInterval: null,
+  gameInterval: null,
+  running: false,
+  paused: false,
+  gameOver: false,
+  won: false,
+
+  newGame() {
+    this.stopAll();
+    this.snake = [];
+    this.grid = S.gridSize;
+    this.direction = { dr: 0, dc: 1 };
+    this.nextDirection = { dr: 0, dc: 1 };
+    this.score = 0;
+    this.wallpassCount = 0;
+    this.wallpassCooldownRemain = 0;
+    this.elapsed = 0;
+    this.running = true;
+    this.paused = false;
+    this.gameOver = false;
+    this.won = false;
+
+    this.autoFit();
+    this.currentSpeed = S.speed;
+    // Init snake at center
+    const mid = Math.floor(this.grid / 2);
+    const len = S.initLength;
+    for (let i = 0; i < len; i++) {
+      this.snake.push({ r: mid, c: mid - i });
+    }
+
+    this.foods = [];
+    this.placeFoods();
+    this.startTimer();
+    this.startGameLoop();
+    this.updateHUD();
+    this.draw();
+    closeWinModal();
+    document.getElementById('pause-overlay').classList.remove('show');
+    document.getElementById('btn-pause').textContent = getStyledText('buttons.pause', '⏯️ 暂停');
+  },
+
+  placeFoods() {
+    const occupied = new Set(this.snake.map(s => `${s.r},${s.c}`));
+    this.foods.forEach(f => occupied.add(`${f.r},${f.c}`));
+    const available = [];
+    for (let r = 0; r < this.grid; r++) {
+      for (let c = 0; c < this.grid; c++) {
+        if (!occupied.has(`${r},${c}`)) available.push({ r, c });
+      }
+    }
+    const needed = S.foodCount - this.foods.length;
+    if (needed <= 0) return;
+    if (available.length === 0) {
+      if (this.foods.length === 0) this.win();
+      return;
+    }
+    for (let i = 0; i < needed && available.length > 0; i++) {
+      const idx = Math.floor(Math.random() * available.length);
+      this.foods.push(available[idx]);
+      available.splice(idx, 1);
+    }
+  },
+
+  updateSpeed() {
+    if (!S.speedProgressive) { this.currentSpeed = S.speed; return; }
+    const eaten = this.snake.length - S.initLength;
+    this.currentSpeed = Math.max(S.speedMin, S.speed - eaten * S.speedProgressiveRate);
+  },
+
+  expandGrid(nr, nc) {
+    // Expand grid: add 3 rows/cols in the direction the snake is going
+    const expandBy = 3;
+    const oldGrid = this.grid;
+    if (nr < 0) {
+      this.grid += expandBy;
+      for (const seg of this.snake) seg.r += expandBy;
+      for (const f of this.foods) f.r += expandBy;
+    } else if (nr >= this.grid) {
+      this.grid += expandBy;
+    } else if (nc < 0) {
+      this.grid += expandBy;
+      for (const seg of this.snake) seg.c += expandBy;
+      for (const f of this.foods) f.c += expandBy;
+    } else if (nc >= this.grid) {
+      this.grid += expandBy;
+    }
+    // Scale food count proportionally (only when > 1 food configured)
+    if (S.foodCount > 1) {
+      const ratio = (this.grid * this.grid) / (oldGrid * oldGrid);
+      S.foodCount = Math.max(1, Math.round(S.foodCount * ratio));
+    }
+    this.placeFoods();
+    this.autoFit();
+  },
+
+  restartGameLoop() {
+    if (this.gameInterval) clearInterval(this.gameInterval);
+    this.startGameLoop();
+  },
+
+  startGameLoop() {
+    this.gameInterval = setInterval(() => {
+      if (!this.running || this.paused || this.gameOver) return;
+      this.tick();
+    }, this.currentSpeed);
+  },
+
+  tick() {
+    // Apply buffered direction
+    this.direction = { ...this.nextDirection };
+
+    // Decrease wallpass cooldown
+    if (this.wallpassCooldownRemain > 0) this.wallpassCooldownRemain--;
+
+    const head = this.snake[0];
+    let nr = head.r + this.direction.dr;
+    let nc = head.c + this.direction.dc;
+    let wallpassed = false;
+
+    // Check wall collision
+    if (nr < 0 || nr >= this.grid || nc < 0 || nc >= this.grid) {
+      if (S.autoExpandGrid) {
+        // Auto-expand grid: add rows/cols and shift positions
+        this.expandGrid(nr, nc);
+        nr = head.r + this.direction.dr;
+        nc = head.c + this.direction.dc;
+        // Re-clamp after expansion (should be in bounds now)
+        nr = Math.max(0, Math.min(this.grid - 1, nr));
+        nc = Math.max(0, Math.min(this.grid - 1, nc));
+      } else if (S.wallpassEnabled) {
+        // Check limit
+        if (S.wallpassLimit > 0 && this.wallpassCount >= S.wallpassLimit) {
+          this.fail(getStyledText('failReasons.wallpassLimit', '穿墙次数已用完'));
+          return;
+        }
+        if (S.wallpassCooldown > 0 && this.wallpassCooldownRemain > 0) {
+            if (S.refereeWallCollide) { this.fail(getStyledText('failReasons.wall', '撞墙了')); return; }
+          }
+        // Wrap around
+        nr = ((nr % this.grid) + this.grid) % this.grid;
+        nc = ((nc % this.grid) + this.grid) % this.grid;
+        wallpassed = true;
+        this.wallpassCount++;
+        this.wallpassCooldownRemain = S.wallpassCooldown;
+        if (S.scoringEnabled) {
+          this.score = Math.max(0, this.score - S.wallpassPenalty);
+        }
+      } else {
+        if (S.refereeWallCollide) { this.fail(getStyledText('failReasons.wall', '撞墙了')); return; }
+        return;
+      }
+    }
+
+    // Check self collision
+    let selfCollideIdx = -1;
+    if (S.refereeSelfCollide) {
+      for (let i = 0; i < this.snake.length; i++) {
+        if (this.snake[i].r === nr && this.snake[i].c === nc) {
+          selfCollideIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (selfCollideIdx !== -1) {
+      if (S.selfPassThrough) {
+        // Overlap: keep the body intact, let head overlap with existing segments
+        // Layer counting is handled during rendering (draw)
+        if (S.scoringEnabled) {
+          this.score = Math.max(0, this.score - 2);
+        }
+      } else {
+        this.fail(getStyledText('failReasons.self', '咬到自己了'));
+        return;
+      }
+    }
+
+    // Move snake
+    this.snake.unshift({ r: nr, c: nc });
+
+    // Check food
+    const eatenIdx = this.foods.findIndex(f => f.r === nr && f.c === nc);
+    if (eatenIdx !== -1) {
+      if (S.scoringEnabled) {
+        const speedBonus = S.scoreSpeedMult;
+        const lengthBonus = this.snake.length * S.scoreLengthBonus;
+        this.score += Math.floor((S.scoreFood + lengthBonus) * speedBonus);
+      }
+      this.foods.splice(eatenIdx, 1);
+      this.updateSpeed();
+      this.restartGameLoop();
+      this.placeFoods();
+
+      // Check win by score
+      if ((S.refereeMode === 'score' || S.refereeMode === 'hybrid') && this.score >= S.refereeTarget) {
+        this.win();
+        return;
+      }
+    } else {
+      this.snake.pop();
+    }
+
+    // Check win by filling board
+    if (this.snake.length === this.grid * this.grid) {
+      this.win();
+      return;
+    }
+
+    this.updateHUD();
+    this.draw();
+  },
+
+  changeDirection(dr, dc) {
+    if (!this.running || this.paused || this.gameOver) return;
+    if (S.noReverse && dr === -this.direction.dr && dc === -this.direction.dc && this.snake.length > 1) return;
+    this.nextDirection = { dr, dc };
+  },
+
+  togglePause() {
+    if (!this.running || this.gameOver) return;
+    this.paused = !this.paused;
+    document.getElementById('pause-overlay').classList.toggle('show', this.paused);
+    document.getElementById('btn-pause').textContent = this.paused ? getStyledText('buttons.resume', '▶️ 继续') : getStyledText('buttons.pause', '⏯️ 暂停');
+  },
+
+  win() {
+    this.gameOver = true;
+    this.won = true;
+    this.running = false;
+    this.stopAll();
+    this.showModal(true);
+  },
+
+  fail(reason) {
+    this.gameOver = true;
+    this.won = false;
+    this.running = false;
+    this.stopAll();
+    this.showModal(false, reason);
+  },
+
+  showModal(won, reason) {
+    const modal = document.getElementById('win-modal');
+    const w = CURRENT_STYLE?.texts?.winModal || {};
+    document.getElementById('win-icon').textContent = won ? '🎉' : '💫';
+    const winTitle = getStyledText('winModal.winTitle', '恭喜获胜！');
+    const loseTitle = getStyledText('winModal.loseTitle', '游戏结束');
+    document.getElementById('win-title').textContent = won ? winTitle : loseTitle;
+    const winVerdict = getStyledText('winModal.winVerdict', '裁决：{mode} | 判定：完美演绎 ✦').replace('{mode}', getRefereeModeName());
+    const losePrefix = getStyledText('winModal.loseVerdictPrefix', '裁决之言：');
+    document.getElementById('win-verdict').textContent = won ? winVerdict : (losePrefix + reason);
+    document.getElementById('win-score').textContent = won ? this.score : '0';
+    document.getElementById('win-length').textContent = this.snake.length;
+    document.getElementById('win-time').textContent = document.getElementById('hud-time').textContent;
+    document.getElementById('win-wallpass').textContent = this.wallpassCount;
+    modal.classList.add('show');
+  },
+
+  startTimer() {
+    this.startTime = performance.now();
+    this.timerInterval = setInterval(() => {
+      if (!this.paused) {
+        this.elapsed = performance.now() - this.startTime;
+        this.updateHUD();
+      }
+      // Judge - timer
+      if ((S.refereeMode === 'timer' || S.refereeMode === 'hybrid') && this.running && !this.gameOver) {
+        if (this.elapsed / 1000 > S.refereeTimelimit) {
+          this.fail(getStyledText('failReasons.time', '时间到'));
+        }
+      }
+    }, 200);
+  },
+
+  stopAll() {
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (this.gameInterval) { clearInterval(this.gameInterval); this.gameInterval = null; }
+  },
+
+  restartGameLoop() {
+    if (this.gameInterval) clearInterval(this.gameInterval);
+    this.startGameLoop();
+  },
+
+  autoFit() {
+    const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
+    const isLandscape = window.innerWidth > window.innerHeight && window.innerWidth >= 769;
+    if (isMobile) {
+      const maxW = Math.min(window.innerWidth - 20, 500);
+      const maxH = window.innerHeight - 280;
+      const maxDim = Math.min(maxW, maxH);
+      S.cellSize = Math.max(12, Math.floor(maxDim / this.grid));
+    } else if (isLandscape) {
+      // Landscape: canvas between left HUD and right buttons
+      const maxW = window.innerWidth - 280; // 120px hud + 100px buttons + 60px padding
+      const maxH = window.innerHeight - 100; // header + padding
+      const maxDim = Math.min(maxW, maxH);
+      S.cellSize = Math.max(14, Math.floor(maxDim / this.grid));
+    } else {
+      S.cellSize = S._cellSizeDesktop || S.cellSize || 24;
+    }
+    // Store desktop preference
+    if (!isMobile) S._cellSizeDesktop = S.cellSize;
+  },
+
+  updateHUD() {
+    document.getElementById('hud-score').textContent = this.score;
+    document.getElementById('hud-length').textContent = this.snake.length;
+    document.getElementById('hud-speed').textContent = this.currentSpeed + 'ms';
+    document.getElementById('hud-wallpass').textContent = S.wallpassLimit > 0 ? `${this.wallpassCount}/${S.wallpassLimit}` : this.wallpassCount;
+    document.getElementById('hud-food').textContent = this.foods.length;
+    const secs = Math.floor(this.elapsed / 1000);
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    document.getElementById('hud-time').textContent = `${String(mins).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  },
+
+  draw() {
+    const canvas = document.getElementById('snake-canvas');
+    const cell = S.cellSize;
+    canvas.width = this.grid * cell;
+    canvas.height = this.grid * cell;
+    const ctx = canvas.getContext('2d');
+
+    // Background (semi-transparent to show through)
+    ctx.fillStyle = S.bgColor + '77';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines
+    if (S.showGrid) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= this.grid; i++) {
+        ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(canvas.width, i * cell); ctx.stroke();
+      }
+    }
+
+    // Build layer count map for snake body (for overlap detection)
+    const layerMap = new Map(); // key: "r,c", value: count
+    for (const seg of this.snake) {
+      const key = `${seg.r},${seg.c}`;
+      layerMap.set(key, (layerMap.get(key) || 0) + 1);
+    }
+
+    // Draw snake body (from tail to head, excluding head)
+    // First pass: draw non-head segments with layer-aware coloring
+    const head = this.snake[0];
+    const headKey = `${head.r},${head.c}`;
+    const drawnLayers = new Map(); // track how many layers drawn at each cell
+
+    for (let i = this.snake.length - 1; i >= 0; i--) {
+      const seg = this.snake[i];
+      const key = `${seg.r},${seg.c}`;
+      const sx = seg.c * cell;
+      const sy = seg.r * cell;
+      const pad = 1;
+      const totalLayers = layerMap.get(key) || 1;
+      const alreadyDrawn = drawnLayers.get(key) || 0;
+      drawnLayers.set(key, alreadyDrawn + 1);
+
+      if (i === 0) {
+        // Head — always draw on top in head color
+        ctx.fillStyle = S.headColor;
+        ctx.fillRect(sx + pad, sy + pad, cell - pad * 2, cell - pad * 2);
+        // Eyes
+        const eyeR = cell * 0.12;
+        let exOff1 = [0.3, 0.3], exOff2 = [0.7, 0.3];
+        if (this.direction.dr === -1) { exOff1 = [0.3, 0.3]; exOff2 = [0.7, 0.3]; }
+        else if (this.direction.dr === 1) { exOff1 = [0.3, 0.7]; exOff2 = [0.7, 0.7]; }
+        else if (this.direction.dc === -1) { exOff1 = [0.3, 0.3]; exOff2 = [0.3, 0.7]; }
+        else { exOff1 = [0.7, 0.3]; exOff2 = [0.7, 0.7]; }
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(sx + cell * exOff1[0], sy + cell * exOff1[1], eyeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(sx + cell * exOff2[0], sy + cell * exOff2[1], eyeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(sx + cell * exOff1[0], sy + cell * exOff1[1], eyeR * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(sx + cell * exOff2[0], sy + cell * exOff2[1], eyeR * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        if (totalLayers >= 2) {
+          // Overlapping cell: draw as yellow block
+          ctx.fillStyle = '#f9d423';
+          ctx.globalAlpha = 0.75;
+          ctx.fillRect(sx + pad, sy + pad, cell - pad * 2, cell - pad * 2);
+          ctx.globalAlpha = 1;
+          // Layer number: only show on the last layer drawn for this cell, and only if >= 3
+          if (alreadyDrawn + 1 === totalLayers && totalLayers >= 3) {
+            ctx.fillStyle = '#333';
+            ctx.font = `bold ${cell * 0.45}px ${getComputedStyle(document.body).fontFamily}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(totalLayers, sx + cell / 2, sy + cell / 2);
+          }
+        } else {
+          // Normal body
+          const alpha = 1 - (i / (this.snake.length + 4)) * 0.5;
+          ctx.fillStyle = S.snakeColor;
+          ctx.globalAlpha = alpha;
+          ctx.fillRect(sx + pad, sy + pad, cell - pad * 2, cell - pad * 2);
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
+    // Draw foods with glow
+    for (const food of this.foods) {
+      const fx = food.c * cell + cell / 2;
+      const fy = food.r * cell + cell / 2;
+      const glow = ctx.createRadialGradient(fx, fy, cell * 0.2, fx, fy, cell * 0.7);
+      glow.addColorStop(0, S.foodColor);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(fx, fy, cell * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = S.foodColor;
+      ctx.beginPath();
+      ctx.arc(fx, fy, cell * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Wallpass effect
+    if (S.wallpassEnabled && S.wallpassFx && this.wallpassCooldownRemain > 0) {
+      const hx = head.c * cell + cell / 2;
+      const hy = head.r * cell + cell / 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(hx, hy, cell * 0.9, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+};
+
+// ==================== INPUT ====================
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('settings-overlay').classList.contains('open')) return;
+
+  // Pause
+  if (e.key === S.pauseKey) {
+    e.preventDefault();
+    game.togglePause();
+    return;
+  }
+
+  if (game.paused || game.gameOver) return;
+
+  const canArrows = S.moveMode === 'arrows' || S.moveMode === 'both';
+  const canWASD = S.moveMode === 'wasd' || S.moveMode === 'both';
+
+  if (canArrows && e.key === 'ArrowUp')    { e.preventDefault(); game.changeDirection(-1, 0); }
+  if (canArrows && e.key === 'ArrowDown')  { e.preventDefault(); game.changeDirection(1, 0); }
+  if (canArrows && e.key === 'ArrowLeft')  { e.preventDefault(); game.changeDirection(0, -1); }
+  if (canArrows && e.key === 'ArrowRight') { e.preventDefault(); game.changeDirection(0, 1); }
+  if (canWASD && (e.key === 'w' || e.key === 'W')) { e.preventDefault(); game.changeDirection(-1, 0); }
+  if (canWASD && (e.key === 's' || e.key === 'S')) { e.preventDefault(); game.changeDirection(1, 0); }
+  if (canWASD && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); game.changeDirection(0, -1); }
+  if (canWASD && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); game.changeDirection(0, 1); }
+});
+
+// ==================== TOUCH CONTROLS ====================
+// Touch D-Pad buttons
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (document.getElementById('settings-overlay').classList.contains('open')) return;
+    if (game.paused || game.gameOver) return;
+    const dir = btn.dataset.dir;
+    if (dir === 'up') game.changeDirection(-1, 0);
+    else if (dir === 'down') game.changeDirection(1, 0);
+    else if (dir === 'left') game.changeDirection(0, -1);
+    else if (dir === 'right') game.changeDirection(0, 1);
+  });
+});
+
+// Swipe gestures on canvas
+let touchStartX = 0, touchStartY = 0;
+let touchStartTime = 0;
+const canvas = document.getElementById('snake-canvas');
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+  if (game.paused || game.gameOver) return;
+  const dx = (e.changedTouches[0]?.clientX || touchStartX) - touchStartX;
+  const dy = (e.changedTouches[0]?.clientY || touchStartY) - touchStartY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const dt = Date.now() - touchStartTime;
+  // Require minimum swipe distance and reasonable speed
+  if (dist < 30 || dt > 500) return;
+  const absDx = Math.abs(dx), absDy = Math.abs(dy);
+  if (absDx > absDy) {
+    game.changeDirection(0, dx > 0 ? 1 : -1);
+  } else {
+    game.changeDirection(dy > 0 ? 1 : -1, 0);
+  }
+});
+
+// Prevent double-tap zoom on canvas
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+// ==================== SETTINGS UI ====================
+let settingsPausedGame = false;
+
+function openSettings() {
+  settingsPausedGame = false;
+  if (game.running && !game.paused && !game.gameOver) {
+    game.togglePause();
+    settingsPausedGame = true;
+  }
+  syncUIToSettings();
+  const overlay = document.getElementById('settings-overlay');
+  overlay.classList.add('open');
+  document.getElementById('game-container').classList.add('blurred');
+  updateRefereeUI();
+  // Save current settings immediately when panel opens
+  saveSettings();
+  // Attach live-save listeners to settings inputs
+  setTimeout(attachLiveSaveListeners, 50);
+}
+
+function closeSettings(skipSave) {
+  // Flush any pending live-save before closing
+  clearTimeout(liveSaveTimer);
+  if (!skipSave) {
+    syncSettingsFromUI();
+    saveSettings();
+  }
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.getElementById('game-container').classList.remove('blurred');
+  if (settingsPausedGame) {
+    game.togglePause();
+    settingsPausedGame = false;
+  }
+}
+
+function applyAndClose() {
+  clearTimeout(liveSaveTimer); // cancel pending live save
+  syncSettingsFromUI();
+  saveSettings();
+  applyTheme();
+  applyAccent();
+  applyAcrylic();
+  game.updateSpeed();
+  game.restartGameLoop();
+  game.updateHUD();
+  game.draw();
+  closeSettings(true);
+  showToast(getStyledText('toast.applied', '设置已应用'));
+}
+
+function syncUIToSettings() {
+  document.getElementById('set-grid-size').value = S.gridSize;
+  document.getElementById('grid-size-val').textContent = `${S.gridSize}×${S.gridSize}`;
+  document.getElementById('set-cell-size').value = S.cellSize;
+  document.getElementById('cell-size-val').textContent = `${S.cellSize}px`;
+  document.getElementById('set-speed').value = S.speed;
+  document.getElementById('speed-val').textContent = `${S.speed}ms`;
+  document.getElementById('set-speed-progressive').checked = S.speedProgressive;
+  document.getElementById('set-speed-rate').value = S.speedProgressiveRate;
+  document.getElementById('set-speed-min').value = S.speedMin;
+  document.getElementById('set-init-length').value = S.initLength;
+  document.getElementById('set-food-count').value = S.foodCount;
+  updateSpeedUI();
+  document.getElementById('set-dark-mode').checked = S.darkMode;
+  document.getElementById('set-accent').value = S.accent;
+  document.getElementById('set-snake-color').value = S.snakeColor;
+  document.getElementById('set-head-color').value = S.headColor;
+  document.getElementById('set-food-color').value = S.foodColor;
+  document.getElementById('set-bg-color').value = S.bgColor;
+  document.getElementById('set-show-grid').checked = S.showGrid;
+  document.getElementById('set-acrylic').checked = S.acrylicEnabled;
+  document.getElementById('set-move-mode').value = S.moveMode;
+  document.getElementById('set-pause-key').value = S.pauseKey;
+  document.getElementById('set-no-reverse').checked = S.noReverse;
+  document.getElementById('set-wallpass-enabled').checked = S.wallpassEnabled;
+  document.getElementById('set-wallpass-penalty').value = S.wallpassPenalty;
+  document.getElementById('set-wallpass-cooldown').value = S.wallpassCooldown;
+  document.getElementById('set-wallpass-limit').value = S.wallpassLimit;
+  document.getElementById('set-wallpass-fx').checked = S.wallpassFx;
+  document.getElementById('set-score-food').value = S.scoreFood;
+  document.getElementById('set-score-length-bonus').value = S.scoreLengthBonus;
+  document.getElementById('set-score-speed-mult').value = S.scoreSpeedMult;
+  document.getElementById('speed-mult-val').textContent = `${S.scoreSpeedMult.toFixed(1)}x`;
+  document.getElementById('set-scoring-enabled').checked = S.scoringEnabled;
+  document.getElementById('set-referee-mode').value = S.refereeMode;
+  document.getElementById('set-referee-target').value = S.refereeTarget;
+  document.getElementById('set-referee-timelimit').value = S.refereeTimelimit;
+  document.getElementById('set-referee-self-collide').checked = S.refereeSelfCollide;
+  document.getElementById('set-referee-wall-collide').checked = S.refereeWallCollide;
+  document.getElementById('set-self-pass-through').checked = S.selfPassThrough;
+  document.getElementById('set-auto-expand-grid').checked = S.autoExpandGrid;
+  document.getElementById('set-session-save-enabled').checked = S.sessionSaveEnabled;
+}
+
+function syncSettingsFromUI() {
+  S.gridSize = parseInt(document.getElementById('set-grid-size').value);
+  S.cellSize = parseInt(document.getElementById('set-cell-size').value);
+  S.speed = parseInt(document.getElementById('set-speed').value);
+  S.speedProgressive = document.getElementById('set-speed-progressive').checked;
+  S.speedProgressiveRate = parseInt(document.getElementById('set-speed-rate').value);
+  S.speedMin = parseInt(document.getElementById('set-speed-min').value);
+  S.initLength = parseInt(document.getElementById('set-init-length').value);
+  S.foodCount = parseInt(document.getElementById('set-food-count').value);
+  S.darkMode = document.getElementById('set-dark-mode').checked;
+  S.accent = document.getElementById('set-accent').value;
+  S.snakeColor = document.getElementById('set-snake-color').value;
+  S.headColor = document.getElementById('set-head-color').value;
+  S.foodColor = document.getElementById('set-food-color').value;
+  S.bgColor = document.getElementById('set-bg-color').value;
+  S.showGrid = document.getElementById('set-show-grid').checked;
+  S.acrylicEnabled = document.getElementById('set-acrylic').checked;
+  S.moveMode = document.getElementById('set-move-mode').value;
+  S.pauseKey = document.getElementById('set-pause-key').value;
+  S.noReverse = document.getElementById('set-no-reverse').checked;
+  S.wallpassEnabled = document.getElementById('set-wallpass-enabled').checked;
+  S.wallpassPenalty = parseInt(document.getElementById('set-wallpass-penalty').value);
+  S.wallpassCooldown = parseInt(document.getElementById('set-wallpass-cooldown').value);
+  S.wallpassLimit = parseInt(document.getElementById('set-wallpass-limit').value);
+  S.wallpassFx = document.getElementById('set-wallpass-fx').checked;
+  S.scoreFood = parseInt(document.getElementById('set-score-food').value);
+  S.scoreLengthBonus = parseInt(document.getElementById('set-score-length-bonus').value);
+  S.scoreSpeedMult = parseFloat(document.getElementById('set-score-speed-mult').value);
+  S.scoringEnabled = document.getElementById('set-scoring-enabled').checked;
+  S.refereeMode = document.getElementById('set-referee-mode').value;
+  S.refereeTarget = parseInt(document.getElementById('set-referee-target').value);
+  S.refereeTimelimit = parseInt(document.getElementById('set-referee-timelimit').value);
+  S.refereeSelfCollide = document.getElementById('set-referee-self-collide').checked;
+  S.refereeWallCollide = document.getElementById('set-referee-wall-collide').checked;
+  S.selfPassThrough = document.getElementById('set-self-pass-through').checked;
+  S.autoExpandGrid = document.getElementById('set-auto-expand-grid').checked;
+  S.sessionSaveEnabled = document.getElementById('set-session-save-enabled').checked;
+}
+
+function resetSettings() {
+  Object.assign(S, DEFAULTS);
+  syncUIToSettings();
+  applyTheme();
+  applyAccent();
+  applyAcrylic();
+  updateRefereeUI();
+  showToast(getStyledText('toast.reset', '已恢复默认设置'));
+}
+
+function updateRange(input, valId) {
+  const val = parseInt(input.value);
+  const el = document.getElementById(valId);
+  if (valId === 'grid-size-val') el.textContent = `${val}×${val}`;
+  else if (valId === 'cell-size-val') el.textContent = `${val}px`;
+  else if (valId === 'speed-val') el.textContent = `${val}ms`;
+}
+
+function updateRangeFloat(input, valId) {
+  const val = parseFloat(input.value);
+  document.getElementById(valId).textContent = `${val.toFixed(1)}x`;
+}
+
+function updateRefereeUI() {
+  const mode = document.getElementById('set-referee-mode').value;
+  document.getElementById('row-referee-target').style.display = (mode === 'score' || mode === 'hybrid') ? '' : 'none';
+  document.getElementById('row-referee-timelimit').style.display = (mode === 'timer' || mode === 'hybrid') ? '' : 'none';
+}
+
+function updateSpeedUI() {
+  const prog = document.getElementById('set-speed-progressive').checked;
+  document.getElementById('row-speed-rate').style.display = prog ? '' : 'none';
+  document.getElementById('row-speed-min').style.display = prog ? '' : 'none';
+}
+
+function applyTheme() {
+  const isDark = document.getElementById('set-dark-mode').checked;
+  document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  S.darkMode = isDark;
+}
+
+function applyAccent() {
+  const accent = document.getElementById('set-accent').value;
+  document.documentElement.style.setProperty('--accent', accent);
+  S.accent = accent;
+}
+
+function applyAcrylic() {
+  document.documentElement.style.setProperty('--acrylic', S.acrylicEnabled ? 'saturate(140%) blur(8px)' : 'none');
+  // Non-acrylic: darken text3 for readability
+  let dynStyle = document.getElementById('dyn-acrylic-style');
+  if (!dynStyle) {
+    dynStyle = document.createElement('style');
+    dynStyle.id = 'dyn-acrylic-style';
+    document.head.appendChild(dynStyle);
+  }
+  if (!S.acrylicEnabled) {
+    dynStyle.textContent = `
+      .setting-info p { color: #666 !important; }
+      .section-desc { color: #666 !important; }
+      [data-theme="dark"] .setting-info p { color: #b0a0c0 !important; }
+      [data-theme="dark"] .section-desc { color: #b0a0c0 !important; }
+    `;
+  } else {
+    dynStyle.textContent = '';
+  }
+}
+
+function getRefereeModeName() {
+  const custom = CURRENT_STYLE?.texts?.refereeModes;
+  if (custom && custom[S.refereeMode]) return custom[S.refereeMode];
+  const map = { auto: '自动裁判', score: '目标分数裁判', timer: '计时裁判', hybrid: '混合裁判' };
+  return map[S.refereeMode] || '自动裁判';
+}
+
+// Nav
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + item.dataset.section).classList.add('active');
+  });
+});
+
+function closeWinModal() {
+  document.getElementById('win-modal').classList.remove('show');
+}
+
+function openDoubaoModal() {
+  document.getElementById('doubao-modal').classList.add('show');
+}
+
+function closeDoubaoModal() {
+  document.getElementById('doubao-modal').classList.remove('show');
+}
+
+function generateDoubaoPrompt() {
+  const charName = document.getElementById('doubao-char-name').value.trim();
+  const bgUrl = document.getElementById('doubao-bg-url').value.trim();
+  if (!charName) { showToast('请输入角色名字~'); return; }
+
+  let prompt = DOUBAO_PROMPT.replace(/\{\{角色名\}\}/g, charName);
+  prompt = prompt.replace(/\{\{背景地址\}\}/g, bgUrl || '（未提供，请自行搜索）');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt).then(() => {
+      showToast('提示词已生成并复制到剪切板~');
+      closeDoubaoModal();
+    }).catch(() => {
+      fallbackCopy(prompt);
+      closeDoubaoModal();
+    });
+  } else {
+    fallbackCopy(prompt);
+    closeDoubaoModal();
+  }
+}
+
+
+// Toast
+let toastTimer;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// Init
+function init() {
+  // One-time cleanup: clear corrupted settings from localStorage
+  try {
+    const raw = localStorage.getItem('snake-game-settings');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.initLength > 100 || parsed.gridSize > 200 || parsed.foodCount > 50) {
+        localStorage.removeItem('snake-game-settings');
+        localStorage.removeItem(SESSION_KEY);
+        S = loadSettings();
+        console.log('已清除损坏的设置数据，恢复默认');
+      }
+    }
+  } catch(e) { localStorage.removeItem('snake-game-settings'); S = loadSettings(); }
+
+  // Check for session-saved settings that differ from defaults
+  if (hasSession() && sessionDiffers()) {
+    document.getElementById('restore-dialog').classList.add('show');
+  } else {
+    startGame();
+  }
+}
+
+function sessionDiffers() {
+  const session = loadSession();
+  if (!session) return false;
+  for (const key of Object.keys(DEFAULTS)) {
+    if (session[key] !== undefined && JSON.stringify(session[key]) !== JSON.stringify(DEFAULTS[key])) {
+      return true;
+    }
+  }
+  // Also check if session has extra keys not in defaults
+  for (const key of Object.keys(session)) {
+    if (!(key in DEFAULTS)) return true;
+  }
+  return false;
+}
+
+function restoreAccept() {
+  const session = loadSession();
+  if (session) {
+    S = { ...DEFAULTS, ...session };
+    saveSettings();
+  }
+  // Keep session for next time
+  document.getElementById('restore-dialog').classList.remove('show');
+  startGame();
+}
+
+function restoreDecline() {
+  // Keep session so it can be offered again next time
+  document.getElementById('restore-dialog').classList.remove('show');
+  startGame();
+}
+
+function restorePermanentlyDecline() {
+  clearSession();
+  document.getElementById('restore-dialog').classList.remove('show');
+  startGame();
+}
+
+function startGame() {
+  applyTheme();
+  applyAccent();
+  applyAcrylic();
+  syncUIToSettings();
+  loadStyle();
+  initDoubaoPromptPreview();
+  game.newGame();
+  // Always save on launch so session is persisted
+  saveSettings();
+}
+
+// ==================== STYLE SYSTEM ====================
+const STYLE_KEY = 'snake-game-style';
+let CURRENT_STYLE = null;
+
+function loadStyle() {
+  try {
+    const raw = localStorage.getItem(STYLE_KEY);
+    if (raw) {
+      CURRENT_STYLE = JSON.parse(raw);
+      applyStyle(CURRENT_STYLE, false);
+    }
+  } catch(e) { CURRENT_STYLE = null; }
+}
+
+function saveStyle() {
+  if (CURRENT_STYLE) {
+    localStorage.setItem(STYLE_KEY, JSON.stringify(CURRENT_STYLE));
+  } else {
+    localStorage.removeItem(STYLE_KEY);
+  }
+}
+
+function handleStyleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.name) throw new Error('缺少风格名称');
+      applyStyle(data, true);
+      showToast(`「${data.name}」风格已加载~`);
+    } catch(err) {
+      showToast('JSON文件解析失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function handleStylePaste() {
+  const textarea = document.getElementById('style-json-paste');
+  const raw = textarea.value.trim();
+  if (!raw) { showToast('请先在文本框中粘贴JSON内容~'); return; }
+  try {
+    const data = JSON.parse(raw);
+    if (!data.name) throw new Error('缺少风格名称');
+    applyStyle(data, true);
+    showToast(`「${data.name}」风格已应用~`);
+    textarea.value = '';
+  } catch(err) {
+    showToast('JSON解析失败：' + err.message);
+  }
+}
+
+// ==================== STYLE VERSION CHECK ====================
+// Current version's known config keys
+const STYLE_SCHEMA = {
+  version: '1.0',
+  topKeys: ['name', 'version', 'colors', 'background', 'texts'],
+  colors: ['snakeBody', 'snakeHead', 'food', 'gridBg', 'accent'],
+  background: ['imageUrl', 'overlayOpacity'],
+  texts: ['gameTitle', 'hudLabels', 'buttons', 'pauseOverlay', 'winModal', 'failReasons', 'toast', 'refereeModes', 'restoreDialog', 'settings', 'exportModal', 'versionUpdateModal', 'doubaoModal']
+};
+
+function checkStyleVersionMismatch(data) {
+  if (!data || typeof data !== 'object') return false;
+  const warning = document.getElementById('style-version-warning');
+  if (!warning) return false;
+
+  // Check if theme has keys we don't know about
+  const extraTopKeys = Object.keys(data).filter(k => !STYLE_SCHEMA.topKeys.includes(k));
+  const hasTexts = data.texts && typeof data.texts === 'object';
+  const missingTextSections = hasTexts ? STYLE_SCHEMA.texts.filter(k => !data.texts[k]) : [];
+
+  // Version mismatch check
+  const themeVersion = data.version || '0';
+  const hasMismatch = extraTopKeys.length > 0 ||
+    (hasTexts && missingTextSections.length > 0 && missingTextSections.length < STYLE_SCHEMA.texts.length) ||
+    themeVersion !== STYLE_SCHEMA.version;
+
+  warning.style.display = hasMismatch ? 'block' : 'none';
+  return hasMismatch;
+}
+
+// ==================== VERSION UPDATE MODAL ====================
+function openVersionUpdateModal() {
+  const modal = document.getElementById('version-update-modal');
+  const promptEl = document.getElementById('version-update-prompt');
+  const style = CURRENT_STYLE || {};
+  const jsonSnippet = JSON.stringify(style, null, 2);
+
+  promptEl.textContent = `请根据以下「现有主题JSON配置」，按照当前版本规范（v${STYLE_SCHEMA.version}）生成更新后的完整主题JSON。
+
+## 当前版本完整格式规范
+
+你必须输出严格符合以下结构的JSON，所有文本字段都要填写：
+
+{
+  "name": "风格名称（包含角色名）",
+  "version": "${STYLE_SCHEMA.version}",
+  "colors": {
+    "snakeBody": "#RRGGBB",
+    "snakeHead": "#RRGGBB",
+    "food": "#RRGGBB",
+    "gridBg": "#RRGGBB",
+    "accent": "#RRGGBB"
+  },
+  "background": {
+    "imageUrl": "背景图片URL"
+  },
+  "texts": {
+    "gameTitle": "游戏大标题（带emoji）",
+    "hudLabels": {
+      "score": "得分标签",
+      "length": "长度标签",
+      "speed": "速度标签",
+      "time": "时间标签",
+      "wallpass": "穿墙标签",
+      "food": "食物标签"
+    },
+    "buttons": {
+      "newGame": "新游戏按钮（带emoji）",
+      "pause": "暂停按钮（带emoji）",
+      "resume": "继续按钮（带emoji）"
+    },
+    "pauseOverlay": "暂停时覆盖在棋盘上的文字",
+    "winModal": {
+      "winTitle": "获胜标题",
+      "loseTitle": "失败标题",
+      "winVerdict": "获胜裁决（{mode}会被替换为裁决模式名）",
+      "loseVerdictPrefix": "失败裁决前缀",
+      "restartBtn": "再来一局按钮",
+      "stats": {
+        "score": "最终得分标签",
+        "length": "蛇身长度标签",
+        "time": "用时标签",
+        "wallpass": "穿墙次数标签"
+      }
+    },
+    "failReasons": {
+      "wall": "撞墙失败提示",
+      "self": "自撞失败提示",
+      "time": "超时失败提示",
+      "wallpassLimit": "穿墙次数用完提示"
+    },
+    "toast": {
+      "applied": "设置应用成功提示",
+      "reset": "恢复默认设置提示"
+    },
+    "refereeModes": {
+      "auto": "自动裁判模式名",
+      "score": "目标分数模式名",
+      "timer": "计时模式名",
+      "hybrid": "混合模式名"
+    },
+    "restoreDialog": {
+      "title": "恢复设置对话框标题",
+      "message": "恢复设置对话框正文",
+      "useDefault": "使用默认按钮",
+      "loadLast": "加载上次设置按钮",
+      "forget": "不再询问按钮文字"
+    },
+    "settings": {
+      "title": "设置面板侧边栏大标题（带emoji）",
+      "footer": {
+        "reset": "底部重置按钮文字（带emoji）",
+        "apply": "底部应用按钮文字（带emoji）"
+      },
+      "navItems": {
+        "游戏": "导航项-游戏（带emoji）",
+        "显示": "导航项-显示（带emoji）",
+        "控制": "导航项-控制（带emoji）",
+        "穿墙": "导航项-穿墙（带emoji）",
+        "计分": "导航项-计分（带emoji）",
+        "裁判": "导航项-裁判（带emoji）",
+        "风格": "导航项-风格（带emoji）"
+      },
+      "sectionGame": {
+        "title": "游戏设置section标题",
+        "desc": "游戏设置section描述",
+        "gridSize": {"name": "棋盘大小标题", "desc": "棋盘大小说明"},
+        "cellSize": {"name": "单元格大小标题", "desc": "单元格大小说明"},
+        "speed": {"name": "游戏速度标题", "desc": "游戏速度说明"},
+        "progressive": {"name": "渐进加速标题", "desc": "渐进加速说明"},
+        "speedRate": {"name": "加速速率标题", "desc": "加速速率说明"},
+        "speedMin": {"name": "最快速度标题", "desc": "最快速度说明"},
+        "initLength": {"name": "初始长度标题", "desc": "初始长度说明"},
+        "foodCount": {"name": "食物数量标题", "desc": "食物数量说明"},
+        "sessionSave": {"name": "保存会话标题", "desc": "保存会话说明"}
+      },
+      "sectionDisplay": {
+        "title": "显示设置section标题",
+        "desc": "显示设置section描述",
+        "darkMode": {"name": "深色模式标题", "desc": "深色模式说明"},
+        "accent": {"name": "强调色标题", "desc": "强调色说明"},
+        "snakeColor": {"name": "蛇身颜色标题", "desc": "蛇身颜色说明"},
+        "headColor": {"name": "蛇头颜色标题", "desc": "蛇头颜色说明"},
+        "foodColor": {"name": "食物颜色标题", "desc": "食物颜色说明"},
+        "bgColor": {"name": "背景颜色标题", "desc": "背景颜色说明"},
+        "showGrid": {"name": "网格线标题", "desc": "网格线说明"},
+        "acrylic": {"name": "亚克力效果标题", "desc": "亚克力效果说明"}
+      },
+      "sectionControls": {
+        "title": "控制设置section标题",
+        "desc": "控制设置section描述",
+        "moveMode": {"name": "移动方式标题", "desc": "移动方式说明"},
+        "pauseKey": {"name": "暂停键标题", "desc": "暂停键说明"},
+        "noReverse": {"name": "禁止反向标题", "desc": "禁止反向说明"}
+      },
+      "sectionWallpass": {
+        "title": "穿墙设置section标题",
+        "desc": "穿墙设置section描述",
+        "enabled": {"name": "启用穿墙标题", "desc": "启用穿墙说明"},
+        "penalty": {"name": "穿墙扣分标题", "desc": "穿墙扣分说明"},
+        "cooldown": {"name": "穿墙冷却标题", "desc": "穿墙冷却说明"},
+        "limit": {"name": "穿墙次数标题", "desc": "穿墙次数说明"},
+        "fx": {"name": "穿墙特效标题", "desc": "穿墙特效说明"}
+      },
+      "sectionScoring": {
+        "title": "计分设置section标题",
+        "desc": "计分设置section描述",
+        "foodScore": {"name": "基础分标题", "desc": "基础分说明"},
+        "lengthBonus": {"name": "长度奖励标题", "desc": "长度奖励说明"},
+        "speedMult": {"name": "速度倍率标题", "desc": "速度倍率说明"},
+        "enabled": {"name": "启用计分标题", "desc": "启用计分说明"}
+      },
+      "sectionReferee": {
+        "title": "裁判设置section标题",
+        "desc": "裁判设置section描述",
+        "mode": {"name": "裁判模式标题", "desc": "裁判模式说明"},
+        "target": {"name": "目标分数标题", "desc": "目标分数说明"},
+        "timelimit": {"name": "时间限制标题", "desc": "时间限制说明"},
+        "selfCollide": {"name": "自撞判定标题", "desc": "自撞判定说明"},
+        "wallCollide": {"name": "撞墙判定标题", "desc": "撞墙判定说明"},
+        "selfPass": {"name": "自撞越过标题", "desc": "自撞越过说明"},
+        "autoExpand": {"name": "自动拓宽标题", "desc": "自动拓宽说明"}
+      },
+      "sectionStyle": {
+        "title": "风格装扮section标题",
+        "desc": "风格装扮section描述",
+        "warning": {"title": "版本不匹配警告标题", "desc": "版本不匹配警告描述", "btn": "更新按钮文字"},
+        "importFile": {"name": "导入风格（文件）标题", "desc": "导入风格（文件）说明", "btn": "选择文件按钮文字"},
+        "importPaste": {"name": "导入风格（粘贴文本）标题", "desc": "导入风格（粘贴文本）说明", "btn": "解析并应用按钮文字", "placeholder": "粘贴文本框placeholder"},
+        "currentStyle": {"name": "当前风格标题", "desc": "当前风格说明（未加载时显示的文字）", "btn": "恢复默认按钮文字"},
+        "preview": {"name": "风格预览标题", "desc": "风格预览说明"},
+        "doubao": {"name": "豆包提示词标题", "desc": "豆包提示词说明", "btn": "生成按钮文字"},
+        "exportTheme": {"name": "导出主题标题", "desc": "导出主题说明", "btn": "导出按钮文字"}
+      }
+    },
+    "exportModal": {
+      "title": "导出弹窗标题",
+      "desc": "导出弹窗描述",
+      "copyBtn": "复制JSON文本按钮",
+      "downloadBtn": "下载JSON文件按钮",
+      "shareBtn": "分享按钮",
+      "closeBtn": "关闭按钮"
+    },
+    "versionUpdateModal": {
+      "title": "更新主题配置弹窗标题",
+      "desc": "更新主题配置弹窗描述",
+      "copyBtn": "复制提示词按钮",
+      "closeBtn": "关闭按钮"
+    },
+    "doubaoModal": {
+      "title": "生成豆包提示词弹窗标题",
+      "desc": "生成豆包提示词弹窗描述",
+      "charNameLabel": "角色名字标签",
+      "charNamePlaceholder": "角色名输入框placeholder",
+      "bgUrlLabel": "背景图片地址标签",
+      "bgUrlPlaceholder": "背景图输入框placeholder",
+      "bgUrlHint": "背景图提示文字",
+      "cancelBtn": "取消按钮",
+      "generateBtn": "合成提示词并复制按钮"
+    }
+  }
+}
+
+## 现有主题JSON（请在此基础上更新）
+
+${jsonSnippet}
+
+## 要求
+
+1. 保留原有主题的所有设计意图（颜色风格、文本语气、背景图片等）
+2. 补全缺失的配置项，严格按照上述格式规范输出
+3. 移除当前版本不支持的配置项
+4. version 字段必须为 "${STYLE_SCHEMA.version}"
+5. 输出完整的JSON，不要省略任何字段
+6. 不要添加任何解释，直接输出JSON代码块`;
+
+  modal.classList.add('show');
+}
+
+function closeVersionUpdateModal() {
+  document.getElementById('version-update-modal').classList.remove('show');
+}
+
+function copyVersionUpdatePrompt() {
+  const text = document.getElementById('version-update-prompt').textContent;
+  fallbackCopy(text);
+  showToast('提示词已复制到剪贴板~');
+}
+
+// ==================== URL IMPORT & REPO IMPORT ====================
+
+function handleStyleUrlImport() {
+  const input = document.getElementById('style-url-input');
+  const url = input.value.trim();
+  if (!url) { showToast('请输入JSON文件的下载链接~'); return; }
+
+  showToast('正在拉取主题文件…');
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!data || !data.name) throw new Error('JSON格式不正确或缺少name字段');
+      applyStyle(data, true);
+      showToast(`「${data.name}」风格已从链接加载~`);
+      input.value = '';
+    })
+    .catch(err => {
+      showToast('拉取失败：' + err.message);
+    });
+}
+
+function parseRepoUrl(input) {
+  const s = input.trim().replace(/\/+$/, '');
+  let m;
+  // GitHub: https://github.com/user/repo, https://github.com/user/repo.git, or https://github.com/user/repo/tree/branch
+  m = s.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/\?#]+)(?:\/tree\/([^\/\?#]+))?/);
+  if (m) {
+    const repo = m[2].replace(/\.git$/, '');
+    return { platform: 'github', owner: m[1], repo, branch: m[3] || 'main', ref: m[3] || 'main' };
+  }
+  // Gitee: https://gitee.com/user/repo, https://gitee.com/user/repo.git, or https://gitee.com/user/repo/tree/branch
+  m = s.match(/^https?:\/\/gitee\.com\/([^\/]+)\/([^\/\?#]+)(?:\/tree\/([^\/\?#]+))?/);
+  if (m) {
+    const repo = m[2].replace(/\.git$/, '');
+    return { platform: 'gitee', owner: m[1], repo, branch: m[3] || 'master', ref: m[3] || 'master' };
+  }
+  return null;
+}
+
+function renderRepoThemeList(themes, info, listEl, descEl) {
+  if (themes.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px;">未找到任何JSON主题文件</div>';
+    return;
+  }
+
+  descEl.textContent = `在 ${info.owner}/${info.repo} 中找到 ${themes.length} 个JSON文件`;
+  listEl.innerHTML = '';
+
+  themes.forEach(item => {
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.08);border:1px solid var(--acrylic-border);cursor:pointer;transition:background 0.2s;';
+    card.onmouseenter = () => card.style.background = 'rgba(255,255,255,0.15)';
+    card.onmouseleave = () => card.style.background = 'rgba(255,255,255,0.08)';
+
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'flex:1;min-width:0;';
+    nameEl.innerHTML = `<div style="font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${item.name}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.path}</div>`;
+
+    const btnEl = document.createElement('button');
+    btnEl.className = 'btn btn-primary';
+    btnEl.style.cssText = 'padding:6px 16px;font-size:12px;white-space:nowrap;';
+    btnEl.textContent = '📥 应用';
+
+    btnEl.onclick = (e) => {
+      e.stopPropagation();
+      applyThemeFromRepoItem(item, info);
+    };
+
+    card.onclick = () => applyThemeFromRepoItem(item, info);
+    card.appendChild(nameEl);
+    card.appendChild(btnEl);
+    listEl.appendChild(card);
+  });
+}
+
+function handleRepoScan() {
+  const input = document.getElementById('style-repo-input');
+  const url = input.value.trim();
+  if (!url) { showToast('请输入仓库链接~'); return; }
+
+  const info = parseRepoUrl(url);
+  if (!info) { showToast('无法识别的仓库链接，请输入GitHub或Gitee仓库地址~'); return; }
+
+  let apiUrl;
+  if (info.platform === 'github') {
+    apiUrl = `https://api.github.com/repos/${info.owner}/${info.repo}/contents?ref=${info.ref}`;
+  } else {
+    apiUrl = `https://gitee.com/api/v5/repos/${info.owner}/${info.repo}/contents?ref=${info.ref}`;
+  }
+
+  const modal = document.getElementById('repo-picker-modal');
+  const listEl = document.getElementById('repo-picker-list');
+  const descEl = document.getElementById('repo-picker-desc');
+
+  descEl.textContent = `正在扫描 ${info.owner}/${info.repo} (${info.branch}) 中的主题文件…`;
+  listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px;">加载中…</div>';
+  modal.classList.add('show');
+
+  fetch(apiUrl)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data)) throw new Error('返回数据格式异常');
+
+      const themes = data.filter(item => item.type === 'file' && item.name.endsWith('.json'));
+      renderRepoThemeList(themes, info, listEl, descEl);
+    })
+    .catch(err => {
+      listEl.innerHTML = `<div style="text-align:center;color:#ff5252;padding:24px;">加载失败：${err.message}<br><span style="font-size:12px;color:var(--text3);">请检查仓库链接是否正确、仓库是否公开</span></div>`;
+    });
+}
+
+function applyThemeFromRepoItem(item, info) {
+  showToast('正在拉取主题文件…');
+
+  if (info.platform === 'github') {
+    // GitHub: raw URL supports CORS, fetch directly
+    const downloadUrl = item.download_url;
+    if (!downloadUrl) { showToast('无法获取该文件的下载地址~'); return; }
+
+    fetch(downloadUrl)
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (!data || !data.name) throw new Error('JSON格式不正确或缺少name字段');
+        applyStyle(data, true);
+        showToast(`「${data.name}」风格已从仓库加载~`);
+        closeRepoPickerModal();
+      })
+      .catch(err => {
+        showToast('拉取失败：' + err.message);
+      });
+  } else {
+    // Gitee: raw URL does NOT support CORS, use API to get base64 content instead
+    const encodedPath = encodeURIComponent(item.path);
+    const fileApiUrl = `https://gitee.com/api/v5/repos/${info.owner}/${info.repo}/contents/${encodedPath}?ref=${info.ref}`;
+
+    fetch(fileApiUrl)
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (!data || !data.content) throw new Error('API未返回文件内容');
+        // Gitee returns base64-encoded content; atob() mangles UTF-8, so use TextDecoder
+        const b64 = data.content.replace(/\n/g, '');
+        const binaryStr = atob(b64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+        const jsonStr = new TextDecoder('utf-8').decode(bytes);
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed.name) throw new Error('JSON格式不正确或缺少name字段');
+        applyStyle(parsed, true);
+        showToast(`「${parsed.name}」风格已从仓库加载~`);
+        closeRepoPickerModal();
+      })
+      .catch(err => {
+        showToast('拉取失败：' + err.message);
+      });
+  }
+}
+
+function closeRepoPickerModal() {
+  document.getElementById('repo-picker-modal').classList.remove('show');
+}
+
+// ==================== OFFICIAL THEME REPO ====================
+const OFFICIAL_REPOS = {
+  github: { url: 'https://github.com/hxtx-hi/snakegame_theme', themePath: 'themes' },
+  gitee:  { url: 'https://gitee.com/hxtx-hi/snakegame_theme',  themePath: '' }
+};
+
+function loadOfficialThemes() {
+  const platformSelect = document.getElementById('official-repo-select');
+  const platform = platformSelect ? platformSelect.value : 'github';
+  const repoConfig = OFFICIAL_REPOS[platform] || OFFICIAL_REPOS.github;
+
+  const info = parseRepoUrl(repoConfig.url);
+  if (!info) { showToast('官方仓库地址异常~'); return; }
+
+  let apiUrl;
+  const pathPart = repoConfig.themePath ? `/${repoConfig.themePath}` : '';
+  if (info.platform === 'github') {
+    apiUrl = `https://api.github.com/repos/${info.owner}/${info.repo}/contents${pathPart}?ref=${info.ref}`;
+  } else {
+    apiUrl = `https://gitee.com/api/v5/repos/${info.owner}/${info.repo}/contents${pathPart}?ref=${info.ref}`;
+  }
+
+  const modal = document.getElementById('repo-picker-modal');
+  const listEl = document.getElementById('repo-picker-list');
+  const descEl = document.getElementById('repo-picker-desc');
+
+  descEl.textContent = `正在从官方仓库 ${info.owner}/${info.repo} (${platform === 'github' ? 'GitHub' : 'Gitee'}) 加载主题列表…`;
+  listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px;">加载中…</div>';
+  modal.classList.add('show');
+
+  fetch(apiUrl)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data)) throw new Error('返回数据格式异常');
+      const themes = data.filter(item => item.type === 'file' && item.name.endsWith('.json'));
+      renderRepoThemeList(themes, info, listEl, descEl);
+    })
+    .catch(err => {
+      listEl.innerHTML = `<div style="text-align:center;color:#ff5252;padding:24px;">加载失败：${err.message}<br><span style="font-size:12px;color:var(--text3);">请检查网络连接或尝试切换另一个平台</span></div>`;
+    });
+}
+
+// ==================== EXPORT MODAL ====================
+function openExportModal() {
+  document.getElementById('export-modal').classList.add('show');
+}
+
+function closeExportModal() {
+  document.getElementById('export-modal').classList.remove('show');
+}
+
+function buildExportData() {
+  return {
+    name: CURRENT_STYLE?.name || '自定义风格',
+    version: STYLE_SCHEMA.version,
+    colors: {
+      snakeBody: S.snakeColor,
+      snakeHead: S.headColor,
+      food: S.foodColor,
+      gridBg: S.bgColor,
+      accent: S.accent
+    },
+    background: {
+      imageUrl: document.body.style.backgroundImage.replace(/url\(['"]?|['"]?\)/g, '')
+    },
+    texts: CURRENT_STYLE?.texts || {}
+  };
+}
+
+function exportStyleCopy() {
+  const data = buildExportData();
+  const text = JSON.stringify(data, null, 2);
+  fallbackCopy(text);
+  showToast('主题JSON已复制到剪贴板~');
+  closeExportModal();
+}
+
+function exportStyleDownload() {
+  const data = buildExportData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (data.name || 'theme') + '.json';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 200);
+  showToast('主题文件已下载~');
+  closeExportModal();
+}
+
+function exportStyleShare() {
+  const data = buildExportData();
+  const text = JSON.stringify(data, null, 2);
+
+  if (!navigator.share) {
+    showToast('该功能手机版独享');
+    closeExportModal();
+    return;
+  }
+
+  const file = new File([text], (data.name || 'theme') + '.json', { type: 'application/json' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({
+      title: data.name || '贪吃蛇主题',
+      text: `🎮 贪吃蛇主题分享：${data.name}`,
+      files: [file]
+    }).then(() => {
+      showToast('分享成功~');
+      closeExportModal();
+    }).catch(() => {
+      closeExportModal();
+    });
+  } else {
+    const shareText = `🎮 贪吃蛇主题分享\n\n主题名：${data.name}\n版本：${data.version}\n\n将下面的JSON内容复制，在游戏设置→风格装扮→导入风格（粘贴文本）中粘贴即可应用：\n\n${text}`;
+    navigator.share({
+      title: data.name || '贪吃蛇主题',
+      text: shareText
+    }).then(() => {
+      showToast('分享成功~');
+      closeExportModal();
+    }).catch(() => {
+      closeExportModal();
+    });
+  }
+}
+
+function applyStyle(data, save) {
+  CURRENT_STYLE = data;
+  if (save !== false) saveStyle();
+
+  // Check version mismatch
+  checkStyleVersionMismatch(data);
+
+  // Update preview
+  const previewEl = document.getElementById('style-preview');
+  const nameEl = document.getElementById('current-style-name');
+  if (previewEl) previewEl.textContent = JSON.stringify(data, null, 2);
+  if (nameEl) nameEl.textContent = data.name || getStyledText('settings.sectionStyle.currentStyle.emptyName', '未命名风格');
+
+  // Apply colors
+  if (data.colors) {
+    const c = data.colors;
+    if (c.snakeBody) { S.snakeColor = c.snakeBody; document.getElementById('set-snake-color').value = c.snakeBody; }
+    if (c.snakeHead) { S.headColor = c.snakeHead; document.getElementById('set-head-color').value = c.snakeHead; }
+    if (c.food) { S.foodColor = c.food; document.getElementById('set-food-color').value = c.food; }
+    if (c.gridBg) { S.bgColor = c.gridBg; document.getElementById('set-bg-color').value = c.gridBg; }
+    if (c.accent) { S.accent = c.accent; document.getElementById('set-accent').value = c.accent; document.documentElement.style.setProperty('--accent', c.accent); }
+  }
+
+  // Apply background
+  if (data.background && data.background.imageUrl) {
+    document.body.style.backgroundImage = `url('${data.background.imageUrl}')`;
+  }
+
+  // Apply texts
+  if (data.texts) applyStyleTexts(data.texts);
+
+  if (game.running || game.paused) {
+    game.draw();
+    game.updateHUD();
+  }
+}
+
+function applyStyleTexts(t) {
+  // Game title
+  if (t.gameTitle) {
+    const h1 = document.querySelector('.game-header h1');
+    if (h1) h1.textContent = t.gameTitle;
+  }
+
+  // HUD labels
+  if (t.hudLabels) {
+    const hudItems = document.querySelectorAll('#hud .hud-item');
+    const hudMap = ['score','length','speed','time','wallpass','food'];
+    hudItems.forEach((item, idx) => {
+      const key = hudMap[idx];
+      if (key && t.hudLabels[key]) {
+        const label = item.querySelector('.hud-label');
+        if (label) label.textContent = t.hudLabels[key];
+      }
+    });
+  }
+
+  // Buttons
+  if (t.buttons) {
+    const btns = document.querySelectorAll('#action-buttons .btn');
+    if (t.buttons.newGame && btns[0]) btns[0].textContent = t.buttons.newGame;
+    if (t.buttons.pause) {
+      const pbtn = document.getElementById('btn-pause');
+      if (pbtn) {
+        pbtn.dataset.pauseText = t.buttons.pause;
+        pbtn.textContent = game.paused ? (t.buttons.resume || getStyledText('buttons.resume', '▶️ 继续')) : t.buttons.pause;
+      }
+    }
+  }
+
+  // Pause overlay
+  if (t.pauseOverlay) {
+    const po = document.getElementById('pause-overlay');
+    if (po) po.textContent = t.pauseOverlay;
+  }
+
+  // Win modal static texts
+  if (t.winModal) {
+    const w = t.winModal;
+    if (w.winTitle) document.getElementById('win-title').dataset.win = w.winTitle;
+    if (w.loseTitle) document.getElementById('win-title').dataset.lose = w.loseTitle;
+    if (w.restartBtn) {
+      const rb = document.querySelector('#win-modal .btn-primary');
+      if (rb) rb.textContent = w.restartBtn;
+    }
+    // Stats labels
+    if (w.stats) {
+      const statEls = document.querySelectorAll('#win-modal .win-stat .lbl');
+      const statKeys = ['score','length','time','wallpass'];
+      statEls.forEach((el, idx) => {
+        if (statKeys[idx] && w.stats[statKeys[idx]]) el.textContent = w.stats[statKeys[idx]];
+      });
+    }
+  }
+
+  // Settings nav
+  if (t.settings && t.settings.navItems) {
+    const navItems = document.querySelectorAll('.nav-item');
+    const navMap = { game:0, display:1, controls:2, wallpass:3, scoring:4, referee:5, style:6, '游戏':0, '显示':1, '控制':2, '穿墙':3, '计分':4, '裁判':5, '风格':6 };
+    for (const [key, text] of Object.entries(t.settings.navItems)) {
+      const idx = navMap[key];
+      if (idx !== undefined && navItems[idx]) {
+        const icon = text.match(/^[\u{1F300}-\u{1F9FF}]|[\u2600-\u26FF]|[\u2700-\u27BF]/u)?.[0] || '';
+        const name = icon ? text.slice(icon.length).trim() : text;
+        navItems[idx].innerHTML = `<span class="nav-icon">${icon}</span> ${name}`;
+      }
+    }
+  }
+
+  // Settings panel full texts
+  if (t.settings) applySettingsTexts(t.settings);
+
+  // Export modal
+  if (t.exportModal) {
+    const em = t.exportModal;
+    const modal = document.getElementById('export-modal');
+    if (modal) {
+      const h2 = modal.querySelector('h2');
+      const p = modal.querySelector('p');
+      if (h2 && em.title) h2.textContent = em.title;
+      if (p && em.desc) p.textContent = em.desc;
+      const btns = modal.querySelectorAll('.win-card button');
+      if (em.copyBtn && btns[0]) btns[0].textContent = em.copyBtn;
+      if (em.downloadBtn && btns[1]) btns[1].textContent = em.downloadBtn;
+      if (em.shareBtn && btns[2]) btns[2].textContent = em.shareBtn;
+      if (em.closeBtn && btns[3]) btns[3].textContent = em.closeBtn;
+    }
+  }
+
+  // Version update modal
+  if (t.versionUpdateModal) {
+    const vm = t.versionUpdateModal;
+    const modal = document.getElementById('version-update-modal');
+    if (modal) {
+      const h2 = modal.querySelector('h2');
+      const p = modal.querySelector('p');
+      if (h2 && vm.title) h2.textContent = vm.title;
+      if (p && vm.desc) p.textContent = vm.desc;
+      const btns = modal.querySelectorAll('.win-card button');
+      if (vm.copyBtn && btns[0]) btns[0].textContent = vm.copyBtn;
+      if (vm.closeBtn && btns[1]) btns[1].textContent = vm.closeBtn;
+    }
+  }
+
+  // Doubao modal
+  if (t.doubaoModal) {
+    const dm = t.doubaoModal;
+    const modal = document.getElementById('doubao-modal');
+    if (modal) {
+      const h2 = modal.querySelector('h2');
+      const ps = modal.querySelectorAll('p');
+      if (h2 && dm.title) h2.textContent = dm.title;
+      if (ps[0] && dm.desc) ps[0].textContent = dm.desc;
+      const labels = modal.querySelectorAll('label');
+      const inputs = modal.querySelectorAll('input');
+      if (labels[0] && dm.charNameLabel) labels[0].textContent = dm.charNameLabel;
+      if (inputs[0] && dm.charNamePlaceholder) inputs[0].placeholder = dm.charNamePlaceholder;
+      if (labels[1] && dm.bgUrlLabel) labels[1].textContent = dm.bgUrlLabel;
+      if (inputs[1] && dm.bgUrlPlaceholder) inputs[1].placeholder = dm.bgUrlPlaceholder;
+      if (ps[1] && dm.bgUrlHint) ps[1].textContent = dm.bgUrlHint;
+      const btns = modal.querySelectorAll('.win-card button');
+      if (dm.cancelBtn && btns[0]) btns[0].textContent = dm.cancelBtn;
+      if (dm.generateBtn && btns[1]) btns[1].textContent = dm.generateBtn;
+    }
+  }
+
+  // Restore dialog
+  if (t.restoreDialog) {
+    const rd = t.restoreDialog;
+    const dialog = document.getElementById('restore-dialog');
+    if (dialog) {
+      if (rd.title) dialog.querySelector('h3').textContent = rd.title;
+      if (rd.message) {
+        const p = dialog.querySelector('p');
+        if (p) p.textContent = rd.message;
+      }
+      const btns = dialog.querySelectorAll('.rd-actions .btn');
+      if (rd.useDefault && btns[0]) btns[0].textContent = rd.useDefault;
+      if (rd.loadLast && btns[1]) btns[1].textContent = rd.loadLast;
+      const forgetBtn = dialog.querySelector('button[style*="font-size:11px"]');
+      if (rd.forget && forgetBtn) forgetBtn.textContent = rd.forget;
+    }
+  }
+}
+
+function applySettingsTexts(s) {
+  // Sidebar header
+  if (s.title) {
+    const header = document.querySelector('.settings-sidebar-header');
+    if (header) header.textContent = s.title;
+  }
+
+  // Footer buttons
+  if (s.footer) {
+    const fbtns = document.querySelectorAll('.settings-footer .btn');
+    if (s.footer.reset && fbtns[0]) fbtns[0].textContent = s.footer.reset;
+    if (s.footer.apply && fbtns[1]) fbtns[1].textContent = s.footer.apply;
+  }
+
+  // Section titles, descriptions and setting rows
+  const sectionMap = {
+    sectionGame: 'section-game',
+    sectionDisplay: 'section-display',
+    sectionControls: 'section-controls',
+    sectionWallpass: 'section-wallpass',
+    sectionScoring: 'section-scoring',
+    sectionReferee: 'section-referee',
+    sectionStyle: 'section-style'
+  };
+
+  for (const [dataKey, sectionId] of Object.entries(sectionMap)) {
+    if (!s[dataKey]) continue;
+    const data = s[dataKey];
+    const section = document.getElementById(sectionId);
+    if (!section) continue;
+
+    // Section h2 and desc
+    const h2 = section.querySelector('h2');
+    const desc = section.querySelector('.section-desc');
+    if (h2 && data.title) h2.textContent = data.title;
+    if (desc && data.desc) desc.textContent = data.desc;
+
+    // Setting rows by data-setting-key
+    section.querySelectorAll('.setting-row[data-setting-key]').forEach(row => {
+      const key = row.dataset.settingKey;
+      if (key && data[key]) {
+        const h4 = row.querySelector('h4');
+        const p = row.querySelector('p');
+        if (h4 && data[key].name) h4.textContent = data[key].name;
+        if (p && data[key].desc) p.textContent = data[key].desc;
+        // Button text
+        const btn = row.querySelector('button');
+        if (btn && data[key].btn) btn.textContent = data[key].btn;
+        // Textarea placeholder
+        const textarea = row.querySelector('textarea');
+        if (textarea && data[key].placeholder) textarea.placeholder = data[key].placeholder;
+      }
+    });
+
+    // Special: version warning for sectionStyle
+    if (dataKey === 'sectionStyle' && data.warning) {
+      const warning = document.getElementById('style-version-warning');
+      if (warning) {
+        const warnDivs = warning.querySelectorAll(':scope > div > div > div');
+        if (warnDivs[0] && data.warning.title) warnDivs[0].textContent = data.warning.title;
+        if (warnDivs[1] && data.warning.desc) warnDivs[1].textContent = data.warning.desc;
+        const warnBtn = warning.querySelector('button');
+        if (warnBtn && data.warning.btn) warnBtn.textContent = data.warning.btn;
+      }
+    }
+  }
+}
+
+function resetStyle() {
+  CURRENT_STYLE = null;
+  localStorage.removeItem(STYLE_KEY);
+  showToast('已恢复默认风格，即将刷新页面~');
+  setTimeout(() => location.reload(), 800);
+}
+
+function getStyledText(path, fallback) {
+  if (!CURRENT_STYLE || !CURRENT_STYLE.texts) return fallback;
+  const parts = path.split('.');
+  let obj = CURRENT_STYLE.texts;
+  for (const p of parts) {
+    if (obj === undefined || obj[p] === undefined) return fallback;
+    obj = obj[p];
+  }
+  return (typeof obj === 'string') ? obj : fallback;
+}
+
+function exportStyle() {
+  const data = buildExportData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (data.name || 'style') + '.json';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 200);
+  showToast('风格文件已导出~');
+}
+
+// ==================== DOUBAO PROMPT ====================
+const DOUBAO_PROMPT = `请你扮演一位精通《原神》角色设定和视觉设计的JSON主题生成专家。
+
+我需要你为一个贪吃蛇小游戏生成一份「风格装扮JSON主题文件」。这个游戏支持通过上传JSON文件来一键更换视觉风格和所有文本。
+
+## 角色要求
+请围绕原神角色「{{角色名}}」进行设计：
+
+### 1. 颜色设定（严格符合角色官方配色）
+- snakeBody（蛇身）：角色代表色的中等亮度版本
+- snakeHead（蛇头）：角色代表色的深色调
+- food（食物）：角色命座/元素爆发特效的点缀色
+- gridBg（棋盘底色）：与角色主题相符的深色背景
+- accent（按钮主题色）：角色最标志性的主题色
+
+### 2. 背景图片
+使用以下背景图片地址：
+{{背景地址}}
+（如果地址为空，请使用米游社横版高清二创壁纸：搜索「原神 {{角色名}} 壁纸 横版 米游社」）
+URL格式：https://upload-bbs.miyoushe.com/upload/xxxx/xxxx.jpg
+
+### 3. 文本风格
+所有文本必须严格符合该角色在原神中的说话语气和用词习惯，包括比喻方式、语气词、口头禅。
+每个section的标题和描述也要角色化。每个设置项的name是大字标题，desc是小字说明，都要角色化。
+
+### 4. 完整JSON格式（必须严格按照此结构输出，所有文本字段都要填写）
+{
+  "name": "风格名称（包含角色名）",
+  "version": "1.0",
+  "colors": {
+    "snakeBody": "#RRGGBB",
+    "snakeHead": "#RRGGBB",
+    "food": "#RRGGBB",
+    "gridBg": "#RRGGBB",
+    "accent": "#RRGGBB"
+  },
+  "background": {
+    "imageUrl": "背景图片URL"
+  },
+  "texts": {
+    "gameTitle": "游戏大标题（带emoji）",
+    "hudLabels": {
+      "score": "得分标签",
+      "length": "长度标签",
+      "speed": "速度标签",
+      "time": "时间标签",
+      "wallpass": "穿墙标签",
+      "food": "食物标签"
+    },
+    "buttons": {
+      "newGame": "新游戏按钮（带emoji）",
+      "pause": "暂停按钮（带emoji）",
+      "resume": "继续按钮（带emoji）"
+    },
+    "pauseOverlay": "暂停时覆盖在棋盘上的文字",
+    "winModal": {
+      "winTitle": "获胜标题",
+      "loseTitle": "失败标题",
+      "winVerdict": "获胜裁决（{mode}会被替换为裁决模式名）",
+      "loseVerdictPrefix": "失败裁决前缀",
+      "restartBtn": "再来一局按钮",
+      "stats": {
+        "score": "最终得分标签",
+        "length": "蛇身长度标签",
+        "time": "用时标签",
+        "wallpass": "穿墙次数标签"
+      }
+    },
+    "failReasons": {
+      "wall": "撞墙失败提示",
+      "self": "自撞失败提示",
+      "time": "超时失败提示",
+      "wallpassLimit": "穿墙次数用完提示"
+    },
+    "toast": {
+      "applied": "设置应用成功提示",
+      "reset": "恢复默认设置提示"
+    },
+    "refereeModes": {
+      "auto": "自动裁判模式名",
+      "score": "目标分数模式名",
+      "timer": "计时模式名",
+      "hybrid": "混合模式名"
+    },
+    "restoreDialog": {
+      "title": "恢复设置对话框标题",
+      "message": "恢复设置对话框正文",
+      "useDefault": "使用默认按钮",
+      "loadLast": "加载上次设置按钮",
+      "forget": "不再询问按钮文字"
+    },
+    "settings": {
+      "title": "设置面板侧边栏大标题（带emoji）",
+      "footer": {
+        "reset": "底部重置按钮文字（带emoji）",
+        "apply": "底部应用按钮文字（带emoji）"
+      },
+      "navItems": {
+        "游戏": "导航项-游戏（带emoji）",
+        "显示": "导航项-显示（带emoji）",
+        "控制": "导航项-控制（带emoji）",
+        "穿墙": "导航项-穿墙（带emoji）",
+        "计分": "导航项-计分（带emoji）",
+        "裁判": "导航项-裁判（带emoji）",
+        "风格": "导航项-风格（带emoji）"
+      },
+      "sectionGame": {
+        "title": "游戏设置section标题",
+        "desc": "游戏设置section描述",
+        "gridSize": {"name": "棋盘大小标题", "desc": "棋盘大小说明"},
+        "cellSize": {"name": "单元格大小标题", "desc": "单元格大小说明"},
+        "speed": {"name": "游戏速度标题", "desc": "游戏速度说明"},
+        "progressive": {"name": "渐进加速标题", "desc": "渐进加速说明"},
+        "speedRate": {"name": "加速速率标题", "desc": "加速速率说明"},
+        "speedMin": {"name": "最快速度标题", "desc": "最快速度说明"},
+        "initLength": {"name": "初始长度标题", "desc": "初始长度说明"},
+        "foodCount": {"name": "食物数量标题", "desc": "食物数量说明"},
+        "sessionSave": {"name": "保存会话标题", "desc": "保存会话说明"}
+      },
+      "sectionDisplay": {
+        "title": "显示设置section标题",
+        "desc": "显示设置section描述",
+        "darkMode": {"name": "深色模式标题", "desc": "深色模式说明"},
+        "accent": {"name": "强调色标题", "desc": "强调色说明"},
+        "snakeColor": {"name": "蛇身颜色标题", "desc": "蛇身颜色说明"},
+        "headColor": {"name": "蛇头颜色标题", "desc": "蛇头颜色说明"},
+        "foodColor": {"name": "食物颜色标题", "desc": "食物颜色说明"},
+        "bgColor": {"name": "背景颜色标题", "desc": "背景颜色说明"},
+        "showGrid": {"name": "网格线标题", "desc": "网格线说明"},
+        "acrylic": {"name": "亚克力效果标题", "desc": "亚克力效果说明"}
+      },
+      "sectionControls": {
+        "title": "控制设置section标题",
+        "desc": "控制设置section描述",
+        "moveMode": {"name": "移动方式标题", "desc": "移动方式说明"},
+        "pauseKey": {"name": "暂停键标题", "desc": "暂停键说明"},
+        "noReverse": {"name": "禁止反向标题", "desc": "禁止反向说明"}
+      },
+      "sectionWallpass": {
+        "title": "穿墙设置section标题",
+        "desc": "穿墙设置section描述",
+        "enabled": {"name": "启用穿墙标题", "desc": "启用穿墙说明"},
+        "penalty": {"name": "穿墙扣分标题", "desc": "穿墙扣分说明"},
+        "cooldown": {"name": "穿墙冷却标题", "desc": "穿墙冷却说明"},
+        "limit": {"name": "穿墙次数标题", "desc": "穿墙次数说明"},
+        "fx": {"name": "穿墙特效标题", "desc": "穿墙特效说明"}
+      },
+      "sectionScoring": {
+        "title": "计分设置section标题",
+        "desc": "计分设置section描述",
+        "foodScore": {"name": "基础分标题", "desc": "基础分说明"},
+        "lengthBonus": {"name": "长度奖励标题", "desc": "长度奖励说明"},
+        "speedMult": {"name": "速度倍率标题", "desc": "速度倍率说明"},
+        "enabled": {"name": "启用计分标题", "desc": "启用计分说明"}
+      },
+      "sectionReferee": {
+        "title": "裁判设置section标题",
+        "desc": "裁判设置section描述",
+        "mode": {"name": "裁判模式标题", "desc": "裁判模式说明"},
+        "target": {"name": "目标分数标题", "desc": "目标分数说明"},
+        "timelimit": {"name": "时间限制标题", "desc": "时间限制说明"},
+        "selfCollide": {"name": "自撞判定标题", "desc": "自撞判定说明"},
+        "wallCollide": {"name": "撞墙判定标题", "desc": "撞墙判定说明"},
+        "selfPass": {"name": "自撞越过标题", "desc": "自撞越过说明"},
+        "autoExpand": {"name": "自动拓宽标题", "desc": "自动拓宽说明"}
+      },
+      "sectionStyle": {
+        "title": "风格装扮section标题",
+        "desc": "风格装扮section描述",
+        "warning": {"title": "版本不匹配警告标题", "desc": "版本不匹配警告描述", "btn": "更新按钮文字"},
+        "importFile": {"name": "导入风格（文件）标题", "desc": "导入风格（文件）说明", "btn": "选择文件按钮文字"},
+        "importPaste": {"name": "导入风格（粘贴文本）标题", "desc": "导入风格（粘贴文本）说明", "btn": "解析并应用按钮文字", "placeholder": "粘贴文本框placeholder"},
+        "currentStyle": {"name": "当前风格标题", "desc": "当前风格说明（未加载时显示的文字）", "btn": "恢复默认按钮文字"},
+        "preview": {"name": "风格预览标题", "desc": "风格预览说明"},
+        "doubao": {"name": "豆包提示词标题", "desc": "豆包提示词说明", "btn": "生成按钮文字"},
+        "exportTheme": {"name": "导出主题标题", "desc": "导出主题说明", "btn": "导出按钮文字"}
+      }
+    },
+    "exportModal": {
+      "title": "导出弹窗标题",
+      "desc": "导出弹窗描述",
+      "copyBtn": "复制JSON文本按钮",
+      "downloadBtn": "下载JSON文件按钮",
+      "shareBtn": "分享按钮",
+      "closeBtn": "关闭按钮"
+    },
+    "versionUpdateModal": {
+      "title": "更新主题配置弹窗标题",
+      "desc": "更新主题配置弹窗描述",
+      "copyBtn": "复制提示词按钮",
+      "closeBtn": "关闭按钮"
+    },
+    "doubaoModal": {
+      "title": "生成豆包提示词弹窗标题",
+      "desc": "生成豆包提示词弹窗描述",
+      "charNameLabel": "角色名字标签",
+      "charNamePlaceholder": "角色名输入框placeholder",
+      "bgUrlLabel": "背景图片地址标签",
+      "bgUrlPlaceholder": "背景图输入框placeholder",
+      "bgUrlHint": "背景图提示文字",
+      "cancelBtn": "取消按钮",
+      "generateBtn": "合成提示词并复制按钮"
+    }
+  }
+}
+
+直接输出完整JSON代码块，不要添加额外解释。所有文本中适当加入emoji，末尾加角色语气符号。`;
+
+function copyDoubaoPrompt() {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(DOUBAO_PROMPT).then(() => {
+      showToast('豆包提示词已复制到剪切板~');
+    }).catch(() => {
+      fallbackCopy(DOUBAO_PROMPT);
+    });
+  } else {
+    fallbackCopy(DOUBAO_PROMPT);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('豆包提示词已复制到剪切板~');
+  } catch {
+    showToast('复制失败，请手动复制~');
+  }
+  document.body.removeChild(ta);
+}
+
+function initDoubaoPromptPreview() {
+  const preview = document.getElementById('doubao-prompt-preview');
+  if (preview) {
+    const lines = DOUBAO_PROMPT.split('\n').slice(0, 6);
+    preview.textContent = lines.join('\n') + '\n…';
+  }
+}
+
+// ==================== LIVE SAFE: Save session on every settings change ====================
+// Instead of relying on exit events, save immediately when settings change.
+// All settings inputs in the panel trigger a debounced save.
+
+let liveSaveTimer;
+function liveSaveSettings() {
+  clearTimeout(liveSaveTimer);
+  liveSaveTimer = setTimeout(() => {
+    syncSettingsFromUI();
+    saveSettings();
+    // If session save was just turned off, clear the session
+    if (!S.sessionSaveEnabled) {
+      clearSession();
+    }
+  }, 300);
+}
+
+// Attach change listeners to all settings inputs
+function attachLiveSaveListeners() {
+  const panel = document.querySelector('.settings-content');
+  panel.querySelectorAll('input, select').forEach(el => {
+    // Remove existing to avoid duplicates
+    el.removeEventListener('change', liveSaveSettings);
+    el.removeEventListener('input', liveSaveSettings);
+    el.addEventListener('change', liveSaveSettings);
+    if (el.type === 'range' || el.type === 'checkbox' || el.type === 'color') {
+      el.addEventListener('input', liveSaveSettings);
+    }
+  });
+}
+
+// Safety net: save session when page becomes hidden
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    // If settings panel is open, sync UI first
+    if (document.getElementById('settings-overlay').classList.contains('open')) {
+      syncSettingsFromUI();
+    }
+    saveSettings();
+  }
+});
+
+// Auto-fit on resize
+let resizeDebounce;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(() => {
+    if (game.running || game.paused) {
+      game.autoFit();
+      game.draw();
+    }
+  }, 200);
+});
+
+// Orientation change for tablets
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (game.running || game.paused) {
+      game.autoFit();
+      game.draw();
+    }
+  }, 300);
+});
+
+init();
+</script>
+</body>
+</html>

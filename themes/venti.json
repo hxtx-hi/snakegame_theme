@@ -1,0 +1,315 @@
+{
+  "name": "温迪·风之牧歌主题",
+  "version": "1.0",
+  "colors": {
+    "snakeBody": "#73A8C2",
+    "snakeHead": "#3A6482",
+    "food": "#E9D8A6",
+    "gridBg": "#141A26",
+    "accent": "#5FB4D8"
+  },
+  "background": {
+    "imageUrl": "https://upload-bbs.miyoushe.com/upload/2021/07/02/160081595/9b8d4843d89bcd419e5e4bfc7d3799c4_5013697469147471566.png"
+  },
+  "texts": {
+    "gameTitle": "🍃风之贪吃诗章🍃",
+    "hudLabels": {
+      "score": "风吟积分",
+      "length": "风絮长度",
+      "speed": "疾风流速",
+      "time": "流云时长",
+      "wallpass": "御风穿行",
+      "food": "风之馈赠"
+    },
+    "buttons": {
+      "newGame": "🎵奏响新曲",
+      "pause": "⏸️暂歇风吟",
+      "resume": "▶️续唱牧歌"
+    },
+    "pauseOverlay": "清风暂止，稍作休憩吧～",
+    "winModal": {
+      "winTitle": "风律圆满✨",
+      "loseTitle": "风息消散💨",
+      "winVerdict": "在{mode}之中，你奏响了完美的风之乐章哦！",
+      "loseVerdictPrefix": "可惜风途中断了，",
+      "restartBtn": "再吟一曲🎶",
+      "stats": {
+        "score": "最终风鸣积分",
+        "length": "风絮周身长度",
+        "time": "旅途流云时长",
+        "wallpass": "御风穿梭次数"
+      }
+    },
+    "failReasons": {
+      "wall": "撞碎了风的壁垒，旅途止步于此啦～",
+      "self": "缠绕自身风絮，乐章骤然停歇咯",
+      "time": "流云飞逝，限定的风之时光结束了",
+      "wallpassLimit": "御风次数耗尽，无法继续穿行天地间"
+    },
+    "toast": {
+      "applied": "风之装扮已悄然就位，很美吧～",
+      "reset": "回归初始风律，一切从头来过啦"
+    },
+    "refereeModes": {
+      "auto": "随风自动裁定",
+      "score": "逐分风吟目标",
+      "timer": "流云限时挑战",
+      "hybrid": "风律混合试炼"
+    },
+    "restoreDialog": {
+      "title": "重置风之装扮？",
+      "message": "要舍弃当前的风之配色与设置，回归最初的模样吗？",
+      "useDefault": "归于本风🌬️",
+      "loadLast": "回溯上次风态",
+      "forget": "不再轻声询问"
+    },
+    "settings": {
+      "title": "🍃风之乐章设置台",
+      "footer": {
+        "reset": "🔄重置风律",
+        "apply": "✨定格风色"
+      },
+      "navItems": {
+        "游戏": "🎮风游规则",
+        "显示": "🌌风物观感",
+        "控制": "🕹️驭风方式",
+        "穿墙": "🌪️御风穿行",
+        "计分": "📜风吟积分",
+        "裁判": "⚖️风律裁定",
+        "风格": "🎨风之装扮"
+      },
+      "sectionGame": {
+        "title": "风游基础规制",
+        "desc": "调整这场风之漫游的基础节奏与场景哦",
+        "gridSize": {
+          "name": "风域棋盘尺度",
+          "desc": "更改风之漫游天地的宽窄大小"
+        },
+        "cellSize": {
+          "name": "风絮格点尺寸",
+          "desc": "调节每一处风之落脚点的大小"
+        },
+        "speed": {
+          "name": "流云漫游速度",
+          "desc": "设定风絮游走天地的初始快慢"
+        },
+        "progressive": {
+          "name": "疾风渐快模式",
+          "desc": "随着旅途推进，让风势愈发急促"
+        },
+        "speedRate": {
+          "name": "风势增幅速率",
+          "desc": "调整每一次进阶，风速提升的幅度"
+        },
+        "speedMin": {
+          "name": "最慢风游速度",
+          "desc": "设定这场漫游最慢的流云流速"
+        },
+        "initLength": {
+          "name": "初始风絮长度",
+          "desc": "开局之时，缠绕周身的风絮体量"
+        },
+        "foodCount": {
+          "name": "天地馈赠数量",
+          "desc": "棋盘之上，风之珍宝的刷新数量"
+        },
+        "sessionSave": {
+          "name": "留存风旅进度",
+          "desc": "退出后依旧保留当前的风之漫游进程"
+        }
+      },
+      "sectionDisplay": {
+        "title": "风物视觉雕琢",
+        "desc": "细细打磨风之世界的色彩与观感呀",
+        "darkMode": {
+          "name": "晚风幽影模式",
+          "desc": "切换静谧深色风境，适配夜色漫游"
+        },
+        "accent": {
+          "name": "风之主题亮色",
+          "desc": "设定界面按钮、提示的标志性风色"
+        },
+        "snakeColor": {
+          "name": "风絮主体配色",
+          "desc": "更换游走周身的风絮专属色彩"
+        },
+        "headColor": {
+          "name": "风首核心配色",
+          "desc": "调整风絮最前端的核心主色调"
+        },
+        "foodColor": {
+          "name": "风之珍宝配色",
+          "desc": "更改天地馈赠之物的点缀色彩"
+        },
+        "bgColor": {
+          "name": "风域底色",
+          "desc": "设定整片漫游棋盘的基底色调"
+        },
+        "showGrid": {
+          "name": "风域格线显隐",
+          "desc": "选择是否展示棋盘的风之经纬线条"
+        },
+        "acrylic": {
+          "name": "流云通透效果",
+          "desc": "开启朦胧亚克力，让风境更显温柔"
+        }
+      },
+      "sectionControls": {
+        "title": "驭风操控法则",
+        "desc": "定制专属于你的驭风行走方式",
+        "moveMode": {
+          "name": "风絮移动模式",
+          "desc": "切换操控风絮游走天地的操作方式"
+        },
+        "pauseKey": {
+          "name": "风吟暂停按键",
+          "desc": "设定休憩风旅、暂停乐章的快捷键"
+        },
+        "noReverse": {
+          "name": "逆风禁行规则",
+          "desc": "开启后，风絮无法瞬间反向游走"
+        }
+      },
+      "sectionWallpass": {
+        "title": "御风穿行秘术",
+        "desc": "解锁风穿壁垒、纵横天地的特殊能力",
+        "enabled": {
+          "name": "御风穿墙之术",
+          "desc": "开启穿过棋盘边界、循环漫游的能力"
+        },
+        "penalty": {
+          "name": "御风积分折损",
+          "desc": "每次穿墙穿梭，对应的积分扣除数值"
+        },
+        "cooldown": {
+          "name": "御风冷却时长",
+          "desc": "两次穿墙漫游之间的间隔时间"
+        },
+        "limit": {
+          "name": "每日御风次数",
+          "desc": "单局旅途内，可穿墙穿梭的最大次数"
+        },
+        "fx": {
+          "name": "御风流光特效",
+          "desc": "开启穿墙时专属的风之流光特效"
+        }
+      },
+      "sectionScoring": {
+        "title": "风吟积分规制",
+        "desc": "自定义这场风之乐章的计分规则",
+        "foodScore": {
+          "name": "珍宝基础积分",
+          "desc": "每拾取一份风之馈赠，获得的基础分值"
+        },
+        "lengthBonus": {
+          "name": "风絮体量嘉奖",
+          "desc": "风絮越长，结算时额外获得的奖励分"
+        },
+        "speedMult": {
+          "name": "疾风倍率加成",
+          "desc": "风速越快，最终积分的增幅倍率"
+        },
+        "enabled": {
+          "name": "风吟计分系统",
+          "desc": "开启或关闭整场旅途的积分统计"
+        }
+      },
+      "sectionReferee": {
+        "title": "风律裁决规则",
+        "desc": "设定判定旅途成败的风之法则",
+        "mode": {
+          "name": "乐章裁定模式",
+          "desc": "切换不同的风旅胜负判定方式"
+        },
+        "target": {
+          "name": "风吟积分目标",
+          "desc": "达成该分数，即可圆满结束乐章"
+        },
+        "timelimit": {
+          "name": "流云限定时长",
+          "desc": "单局旅途最长可漫游的时间限度"
+        },
+        "selfCollide": {
+          "name": "自缠风絮判定",
+          "desc": "触碰自身风絮时，是否判定旅途失败"
+        },
+        "wallCollide": {
+          "name": "触碰壁垒判定",
+          "desc": "无穿墙能力时撞壁，是否终结旅途"
+        },
+        "selfPass": {
+          "name": "自缠穿行豁免",
+          "desc": "特殊模式下，是否可穿过自身风絮"
+        },
+        "autoExpand": {
+          "name": "风域自动拓宽",
+          "desc": "旅途推进中，自动扩大漫游棋盘范围"
+        }
+      },
+      "sectionStyle": {
+        "title": "风之装扮诗章",
+        "desc": "一键换装，浸染满屏自由的风之气息✨",
+        "warning": {
+          "title": "风律版本不匹配",
+          "desc": "当前主题版本略有偏差，部分风色效果可能失效哦",
+          "btn": "更新风之诗章"
+        },
+        "importFile": {
+          "name": "导入风装文件📂",
+          "desc": "读取本地主题文件，换上全新风之装扮",
+          "btn": "拾取风之文件"
+        },
+        "importPaste": {
+          "name": "粘贴导入风装📝",
+          "desc": "复制主题代码，一键解析应用专属风格",
+          "btn": "解读风之韵律",
+          "placeholder": "在此粘贴风之主题JSON代码吧～"
+        },
+        "currentStyle": {
+          "name": "当前风之装扮",
+          "desc": "暂未加载专属主题，仍是朴素的初始风境",
+          "btn": "褪去专属风色"
+        },
+        "preview": {
+          "name": "风装实时预览",
+          "desc": "即时查看当前搭配的风之视觉效果"
+        },
+        "doubao": {
+          "name": "诗章生成咒语",
+          "desc": "一键生成专属角色的风之主题配置",
+          "btn": "编织新风诗"
+        },
+        "exportTheme": {
+          "name": "封存风之主题💾",
+          "desc": "将当前绝美风装导出保存，随时复用",
+          "btn": "留存风律"
+        }
+      }
+    },
+    "exportModal": {
+      "title": "封存专属风之诗章",
+      "desc": "将这份温柔的风色主题保存下来，随时奏响哦～",
+      "copyBtn": "复制诗章文本",
+      "downloadBtn": "下载风装文件",
+      "shareBtn": "分享风之浪漫",
+      "closeBtn": "收起弹窗"
+    },
+    "versionUpdateModal": {
+      "title": "更新风之主题配置",
+      "desc": "适配最新规则，让风之乐章完美奏响✨",
+      "copyBtn": "复制更新咒语",
+      "closeBtn": "暂且搁置"
+    },
+    "doubaoModal": {
+      "title": "编织全新风之主题",
+      "desc": "输入心仪角色，生成独属于你的视觉诗章～",
+      "charNameLabel": "吟咏角色之名",
+      "charNamePlaceholder": "请输入原神角色名称",
+      "bgUrlLabel": "风境壁纸链接",
+      "bgUrlPlaceholder": "粘贴高清背景图链接",
+      "bgUrlHint": "推荐米游社横版高清壁纸，风感更佳哦",
+      "cancelBtn": "作罢",
+      "generateBtn": "生成并复制诗章咒语"
+    }
+  }
+}

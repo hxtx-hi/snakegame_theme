@@ -1,0 +1,315 @@
+{
+  "name": "哥伦比娅的星空旋律",
+  "version": "1.0",
+  "colors": {
+    "snakeBody": "#4caf50",
+    "snakeHead": "#2e7d32",
+    "food": "#ff5252",
+    "gridBg": "#1a1a2e",
+    "accent": "#d470a8"
+  },
+  "background": {
+    "imageUrl": "https://upload-bbs.miyoushe.com/upload/2026/01/20/339358947/24b3a6dc4aa49faa593afee51e75ba27_6340157856603382987.jpg"
+  },
+  "texts": {
+    "gameTitle": "🐍 哥伦比娅的小游戏",
+    "hudLabels": {
+      "score": "星光",
+      "length": "长度",
+      "speed": "韵律",
+      "time": "时光",
+      "wallpass": "穿越",
+      "food": "馈赠"
+    },
+    "buttons": {
+      "newGame": "✨ 奏响新曲",
+      "pause": "🎵 休止符",
+      "resume": "▶️ 继续"
+    },
+    "pauseOverlay": "旋律在此停留…",
+    "winModal": {
+      "winTitle": "华彩乐章！",
+      "loseTitle": "终章降临",
+      "winVerdict": "裁决：{mode} | 判定：完美演绎 ✦",
+      "loseVerdictPrefix": "裁决之言：",
+      "restartBtn": "✨ 再奏一曲",
+      "stats": {
+        "score": "收获星光",
+        "length": "身姿长幅",
+        "time": "流逝时光",
+        "wallpass": "次元穿越"
+      }
+    },
+    "failReasons": {
+      "wall": "撞上了星穹的屏障…",
+      "self": "绊到了自己的裙摆…",
+      "time": "沙漏已流尽…",
+      "wallpassLimit": "次元穿越的次数已用尽了…"
+    },
+    "toast": {
+      "applied": "旋律已经更新~",
+      "reset": "已回归最初的旋律~"
+    },
+    "refereeModes": {
+      "auto": "永恒乐章",
+      "score": "星辉目标",
+      "timer": "时光沙漏",
+      "hybrid": "双轨裁决"
+    },
+    "restoreDialog": {
+      "title": "恢复乐曲原有设置",
+      "message": "是否需要将所有调音参数恢复至初始乐章状态？",
+      "useDefault": "使用默认乐曲配置",
+      "loadLast": "加载上次调音参数",
+      "forget": "不再弹出本次提示"
+    },
+    "settings": {
+      "title": "✨ 调音台",
+      "footer": {
+        "reset": "↺ 回归原初",
+        "apply": "✓ 让旋律绽放"
+      },
+      "navItems": {
+        "游戏": "🎵 游戏之韵",
+        "显示": "🌈 舞台光影",
+        "控制": "🎹 演奏方式",
+        "穿墙": "🌀 次元穿越",
+        "计分": "🌟 星辉旋律",
+        "裁判": "⚖️ 裁决之法",
+        "风格": "🎨 风格装扮"
+      },
+      "sectionGame": {
+        "title": "游戏之韵",
+        "desc": "调整舞台的广度与旋律的节奏~",
+        "gridSize": {
+          "name": "星穹大小",
+          "desc": "每一格星辰的广阔程度~"
+        },
+        "cellSize": {
+          "name": "星辰尺寸",
+          "desc": "每一颗星辰的闪耀大小~"
+        },
+        "speed": {
+          "name": "旋律速度",
+          "desc": "舞蹈的节奏——越快越激昂~"
+        },
+        "progressive": {
+          "name": "渐强加速",
+          "desc": "旋律会随着旅途渐渐高昂~"
+        },
+        "speedRate": {
+          "name": "加速幅度",
+          "desc": "每收集一颗馈赠，节奏缩短的时值~"
+        },
+        "speedMin": {
+          "name": "极限韵律",
+          "desc": "渐强加速的最快节拍~"
+        },
+        "initLength": {
+          "name": "初登场身姿",
+          "desc": "旅途开始时舞蹈者的身长~"
+        },
+        "foodCount": {
+          "name": "馈赠数量",
+          "desc": "星空中同时闪烁的馈赠~"
+        },
+        "sessionSave": {
+          "name": "记忆乐章",
+          "desc": "将此刻的旋律铭记，下次还能重温~"
+        }
+      },
+      "sectionDisplay": {
+        "title": "舞台光影",
+        "desc": "装饰属于你的梦幻舞台吧~",
+        "darkMode": {
+          "name": "暗夜星辰",
+          "desc": "在夜幕的星空中起舞~"
+        },
+        "accent": {
+          "name": "主调色彩",
+          "desc": "为舞台选一抹高光~"
+        },
+        "snakeColor": {
+          "name": "舞者身色",
+          "desc": "舞蹈者的裙摆颜色~"
+        },
+        "headColor": {
+          "name": "舞者冠冕",
+          "desc": "舞蹈者的头饰颜色~"
+        },
+        "foodColor": {
+          "name": "馈赠光辉",
+          "desc": "天降馈赠的闪耀色彩~"
+        },
+        "bgColor": {
+          "name": "星穹底色",
+          "desc": "这片星空的基底色彩~"
+        },
+        "showGrid": {
+          "name": "星轨显现",
+          "desc": "让星轨在舞台中若隐若现~"
+        },
+        "acrylic": {
+          "name": "亚克力效果",
+          "desc": "老旧手机使用亚克力效果可能产生卡顿，取消勾选该选项可以提高手机运行效率"
+        }
+      },
+      "sectionControls": {
+        "title": "演奏方式",
+        "desc": "选择引导舞蹈的方式~",
+        "moveMode": {
+          "name": "指挥方式",
+          "desc": "用哪种方式引导舞者的步伐~"
+        },
+        "pauseKey": {
+          "name": "休止符",
+          "desc": "按下哪个键能让旋律暂停~"
+        },
+        "noReverse": {
+          "name": "禁止回旋",
+          "desc": "不许舞者突然转身——那太危险了~"
+        }
+      },
+      "sectionWallpass": {
+        "title": "次元穿越",
+        "desc": "在星穹边界穿梭的奥秘~",
+        "enabled": {
+          "name": "次元穿梭",
+          "desc": "触碰星穹边界时，从对面降临——关闭则会撞上屏障~"
+        },
+        "penalty": {
+          "name": "穿越代价",
+          "desc": "每次穿梭次元消耗的星光~"
+        },
+        "cooldown": {
+          "name": "穿梭冷却",
+          "desc": "连续穿越之间的休止间隙~"
+        },
+        "limit": {
+          "name": "穿越次数上限",
+          "desc": "每支乐曲中可以穿越次元的次数~"
+        },
+        "fx": {
+          "name": "穿越光效",
+          "desc": "穿越次元时绽放的光之轨迹~"
+        }
+      },
+      "sectionScoring": {
+        "title": "星辉旋律",
+        "desc": "收集星光时的计算法则~",
+        "foodScore": {
+          "name": "基础星光",
+          "desc": "每收集一颗馈赠获得的基础星光~"
+        },
+        "lengthBonus": {
+          "name": "身姿加成",
+          "desc": "舞者越长，每颗馈赠额外闪烁的星光~"
+        },
+        "speedMult": {
+          "name": "激情倍率",
+          "desc": "节奏越快，星光闪耀越绚烂~"
+        },
+        "enabled": {
+          "name": "星光计算",
+          "desc": "关闭后就不再计算星光了哦~"
+        }
+      },
+      "sectionReferee": {
+        "title": "裁决之法",
+        "desc": "决定这支乐曲何时迎来终章~",
+        "mode": {
+          "name": "裁决方式",
+          "desc": "如何判定这段旅程的结局~"
+        },
+        "target": {
+          "name": "目标星辉",
+          "desc": "收集到这个数量的星光即为胜利~"
+        },
+        "timelimit": {
+          "name": "时光沙漏",
+          "desc": "沙漏流尽时，旅程便要结束了~"
+        },
+        "selfCollide": {
+          "name": "自我碰撞",
+          "desc": "舞者碰到自己的裙摆——会受伤哦~"
+        },
+        "wallCollide": {
+          "name": "屏障碰撞",
+          "desc": "穿梭关闭时，撞上星穹边界会很痛的~"
+        },
+        "selfPass": {
+          "name": "裙摆穿越",
+          "desc": "碰到自己的裙摆时截断继续前进（不结束旅程）~"
+        },
+        "autoExpand": {
+          "name": "星穹扩展",
+          "desc": "碰到边界时舞台自动延伸（优先于穿越）~"
+        }
+      },
+      "sectionStyle": {
+        "title": "乐曲风格装扮",
+        "desc": "导入、预览与导出专属星空乐章主题",
+        "warning": {
+          "title": "主题版本不匹配",
+          "desc": "当前主题版本与程序规范存在差异，建议更新配置适配新版本",
+          "btn": "一键更新主题"
+        },
+        "importFile": {
+          "name": "从文件导入乐章",
+          "desc": "选取本地JSON主题文件加载星空旋律配置",
+          "btn": "选择文件"
+        },
+        "importPaste": {
+          "name": "粘贴文本导入乐章",
+          "desc": "直接粘贴主题JSON文本快速应用风格",
+          "btn": "解析并奏响乐章",
+          "placeholder": "在此粘贴主题JSON文本内容..."
+        },
+        "currentStyle": {
+          "name": "当前生效乐章",
+          "desc": "暂未加载任何自定义主题，使用默认星空旋律",
+          "btn": "恢复原版乐章"
+        },
+        "preview": {
+          "name": "乐章预览效果",
+          "desc": "实时查看当前主题在游戏内的呈现模样"
+        },
+        "doubao": {
+          "name": "AI生成主题提示词",
+          "desc": "自动生成适配本程序的豆包创作指令",
+          "btn": "生成提示词"
+        },
+        "exportTheme": {
+          "name": "导出当前乐章主题",
+          "desc": "将本套星空旋律配置导出为JSON文件备份",
+          "btn": "导出主题"
+        }
+      }
+    },
+    "exportModal": {
+      "title": "导出星空旋律主题",
+      "desc": "复制文本或下载文件保存当前哥伦比娅主题配置",
+      "copyBtn": "复制JSON文本",
+      "downloadBtn": "下载JSON文件",
+      "shareBtn": "分享主题配置",
+      "closeBtn": "关闭弹窗"
+    },
+    "versionUpdateModal": {
+      "title": "更新主题适配新版本",
+      "desc": "复制下方提示词，让AI将旧版主题升级至v1.0完整规范",
+      "copyBtn": "复制升级提示词",
+      "closeBtn": "关闭"
+    },
+    "doubaoModal": {
+      "title": "生成AI创作提示词",
+      "desc": "填写信息即可生成可直接发给豆包的主题制作指令",
+      "charNameLabel": "角色名称",
+      "charNamePlaceholder": "例如：哥伦比娅",
+      "bgUrlLabel": "背景图片链接",
+      "bgUrlPlaceholder": "粘贴图片URL地址",
+      "bgUrlHint": "建议使用高清横向背景图保证显示效果",
+      "cancelBtn": "取消",
+      "generateBtn": "合成提示词并复制"
+    }
+  }
+}
